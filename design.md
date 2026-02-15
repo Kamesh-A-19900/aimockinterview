@@ -11,34 +11,343 @@ The Mock Interview Agent System is a comprehensive AI-powered interview platform
 
 The system supports multiple interview types (HR behavioral, technical deep-dive, coding assessment, stress scenarios) and dynamically adapts questions based on resume content and conversation context.
 
+## Technology Stack
+
+### Core Technologies
+
+**Backend Framework:**
+- Python 3.11+ with FastAPI for REST API
+- Async/await for concurrent request handling
+- Pydantic for data validation
+
+**LLM & AI:**
+- OpenAI GPT-4 or Anthropic Claude for interview agent (fine-tuned)
+- Hugging Face Transformers for NLP tasks (resume parsing, sentiment analysis)
+- LangChain for LLM orchestration and prompt management
+
+**PDF Processing:**
+- PyPDF2 or pdfplumber for text extraction
+- spaCy or NLTK for text preprocessing and NLP
+
+**Databases:**
+- PostgreSQL 15+ for user database (structured data)
+- ChromaDB for vector database (embeddings and semantic search)
+- Redis for session management and caching
+
+**Frontend:**
+- React 18+ with TypeScript
+- TailwindCSS for styling
+- React Query for API state management
+- Monaco Editor for code editor component
+
+**Infrastructure:**
+- Docker for containerization
+- Kubernetes for orchestration (optional for scale)
+- Nginx as reverse proxy
+- AWS S3 or similar for PDF file storage
+
+**Development Tools:**
+- Kiro for AI-assisted development
+- pytest for testing
+- Hypothesis for property-based testing
+- Black and Ruff for code formatting
+- mypy for type checking
+
+**Monitoring & Logging:**
+- Prometheus for metrics
+- Grafana for visualization
+- ELK Stack (Elasticsearch, Logstash, Kibana) for logging
+- Sentry for error tracking
+
+### Why These Technologies?
+
+**ChromaDB**: Chosen for vector database because it's:
+- Open-source and free
+- Easy to integrate with Python
+- Supports multiple embedding models
+- Provides efficient similarity search
+- Has good documentation and community support
+
+**FastAPI**: Chosen for backend because it:
+- Provides automatic API documentation
+- Has excellent async support for LLM calls
+- Offers built-in validation with Pydantic
+- Has high performance comparable to Node.js
+
+**PostgreSQL**: Chosen for structured data because it:
+- Provides ACID compliance for data integrity
+- Supports JSON fields for flexible schema
+- Has excellent performance and reliability
+- Offers strong community and tooling support
+
+## Hardware & Software Requirements
+
+### Development Environment
+
+**Minimum Requirements:**
+- CPU: 4 cores (Intel i5 or equivalent)
+- RAM: 16 GB
+- Storage: 50 GB SSD
+- OS: Linux (Ubuntu 22.04+), macOS 12+, or Windows 11 with WSL2
+
+**Recommended Requirements:**
+- CPU: 8 cores (Intel i7/i9 or AMD Ryzen 7/9)
+- RAM: 32 GB
+- Storage: 100 GB NVMe SSD
+- GPU: Optional, but helpful for local LLM testing (NVIDIA with 8GB+ VRAM)
+
+**Software:**
+- Python 3.11+
+- Node.js 18+
+- Docker Desktop
+- PostgreSQL 15+
+- Git
+- VS Code or PyCharm (with Kiro extension)
+
+### Production Environment
+
+**Application Server (per instance):**
+- CPU: 4-8 vCPUs
+- RAM: 16-32 GB
+- Storage: 100 GB SSD
+- OS: Ubuntu 22.04 LTS
+
+**Database Server:**
+- CPU: 8-16 vCPUs
+- RAM: 32-64 GB
+- Storage: 500 GB SSD (with auto-scaling)
+- Backup: Daily automated backups with 30-day retention
+
+**Vector Database Server:**
+- CPU: 4-8 vCPUs
+- RAM: 16-32 GB (depends on embedding size and dataset)
+- Storage: 200 GB SSD
+- GPU: Optional for faster embedding generation
+
+**Load Balancer:**
+- CPU: 2 vCPUs
+- RAM: 4 GB
+- Managed service (AWS ALB, GCP Load Balancer) recommended
+
+**File Storage:**
+- Object storage (AWS S3, GCP Cloud Storage, Azure Blob)
+- Estimated: 1 TB for 10,000 resumes (100 KB average per PDF)
+
+### Scaling Considerations
+
+**Small Scale (100-500 users):**
+- 2 application servers
+- 1 database server
+- 1 vector database server
+- Shared Redis instance
+
+**Medium Scale (500-5,000 users):**
+- 4-6 application servers (auto-scaling)
+- 1 primary + 1 replica database server
+- 2 vector database servers
+- Dedicated Redis cluster
+
+**Large Scale (5,000+ users):**
+- 10+ application servers (auto-scaling)
+- Database cluster with read replicas
+- Distributed vector database
+- Redis cluster with sharding
+- CDN for static assets
+
+## Cost Estimation
+
+### Development Phase (3-6 months)
+
+**Team:**
+- 2 Backend Developers: $120k-180k/year × 2 = $240k-360k
+- 1 Frontend Developer: $100k-150k/year = $100k-150k
+- 1 ML/AI Engineer: $140k-200k/year = $140k-200k
+- 1 DevOps Engineer (part-time): $60k-90k/year = $60k-90k
+- 1 QA Engineer: $80k-120k/year = $80k-120k
+- **Total Team Cost: $620k-1,020k/year** (prorated for 3-6 months: $155k-510k)
+
+**Infrastructure (Development):**
+- Cloud services (AWS/GCP): $500-1,000/month
+- LLM API costs (OpenAI/Anthropic): $1,000-2,000/month for testing
+- Development tools & licenses: $200-500/month
+- **Total Infrastructure: $1,700-3,500/month × 6 = $10k-21k**
+
+**Total Development Cost: $165k-531k**
+
+### Operational Costs (Monthly)
+
+**Small Scale (100-500 users, ~50 interviews/day):**
+
+*Infrastructure:*
+- Application servers (2× t3.large): $140/month
+- Database (db.t3.large): $140/month
+- Vector DB (t3.large): $70/month
+- Redis (cache.t3.small): $30/month
+- Load balancer: $20/month
+- S3 storage (100 GB): $3/month
+- Bandwidth: $50/month
+- **Subtotal Infrastructure: $453/month**
+
+*LLM API Costs:*
+- GPT-4 API: ~$0.03/1K tokens input, $0.06/1K tokens output
+- Average interview: ~10K tokens input, 5K tokens output = $0.60/interview
+- 50 interviews/day × 30 days = 1,500 interviews/month
+- **LLM Costs: $900/month**
+
+*Other Services:*
+- Monitoring (Datadog/New Relic): $100/month
+- Error tracking (Sentry): $30/month
+- Email service (SendGrid): $20/month
+- **Subtotal Services: $150/month**
+
+**Total Small Scale: ~$1,500/month**
+
+---
+
+**Medium Scale (500-5,000 users, ~500 interviews/day):**
+
+*Infrastructure:*
+- Application servers (4× t3.xlarge, auto-scaling): $600/month
+- Database (db.r5.xlarge + replica): $800/month
+- Vector DB (2× t3.xlarge): $300/month
+- Redis cluster: $150/month
+- Load balancer: $40/month
+- S3 storage (1 TB): $25/month
+- Bandwidth: $300/month
+- CDN (CloudFront): $100/month
+- **Subtotal Infrastructure: $2,315/month**
+
+*LLM API Costs:*
+- 500 interviews/day × 30 days = 15,000 interviews/month
+- **LLM Costs: $9,000/month**
+
+*Other Services:*
+- Monitoring: $300/month
+- Error tracking: $100/month
+- Email service: $100/month
+- Backup storage: $50/month
+- **Subtotal Services: $550/month**
+
+**Total Medium Scale: ~$11,865/month**
+
+---
+
+**Large Scale (5,000+ users, ~2,000 interviews/day):**
+
+*Infrastructure:*
+- Application servers (10× c5.2xlarge, auto-scaling): $3,000/month
+- Database cluster (db.r5.4xlarge + 2 replicas): $4,000/month
+- Vector DB cluster: $1,500/month
+- Redis cluster (sharded): $500/month
+- Load balancer (multi-AZ): $100/month
+- S3 storage (5 TB): $125/month
+- Bandwidth: $1,500/month
+- CDN: $500/month
+- **Subtotal Infrastructure: $11,225/month**
+
+*LLM API Costs:*
+- 2,000 interviews/day × 30 days = 60,000 interviews/month
+- **LLM Costs: $36,000/month**
+- Note: At this scale, consider fine-tuning and self-hosting smaller models to reduce costs
+
+*Other Services:*
+- Monitoring: $1,000/month
+- Error tracking: $300/month
+- Email service: $300/month
+- Backup storage: $200/month
+- Security & compliance: $500/month
+- **Subtotal Services: $2,300/month**
+
+**Total Large Scale: ~$49,525/month**
+
+### Cost Optimization Strategies
+
+1. **LLM Costs** (largest expense):
+   - Fine-tune smaller open-source models (Llama 2, Mistral) for specific tasks
+   - Self-host models on GPU instances for high-volume usage
+   - Implement caching for similar questions
+   - Use cheaper models for non-critical tasks (e.g., GPT-3.5 for preprocessing)
+   - Potential savings: 50-70% at scale
+
+2. **Infrastructure**:
+   - Use spot instances for non-critical workloads
+   - Implement auto-scaling to match demand
+   - Use reserved instances for predictable workloads (save 30-50%)
+   - Optimize database queries and add caching
+   - Compress and deduplicate stored data
+
+3. **Development**:
+   - Use Kiro for AI-assisted development to increase productivity
+   - Implement comprehensive testing to reduce bug-fixing costs
+   - Use managed services to reduce DevOps overhead
+
+### Revenue Model Considerations
+
+To achieve profitability, consider pricing tiers:
+
+**Freemium:**
+- 1 interview/month free
+- Basic assessment report
+- Target: User acquisition
+
+**Professional ($29-49/month):**
+- 10 interviews/month
+- All interview types
+- Detailed reports
+- Target: Individual job seekers
+
+**Business ($199-499/month):**
+- 100 interviews/month
+- Custom interview types
+- API access
+- Analytics dashboard
+- Target: Small companies, recruiters
+
+**Enterprise (Custom pricing):**
+- Unlimited interviews
+- White-label option
+- Dedicated support
+- Custom integrations
+- Target: Large corporations, universities
+
+**Break-even Analysis (Medium Scale):**
+- Monthly costs: ~$12,000
+- Required revenue: $12,000 / 0.7 (30% margin) = ~$17,000/month
+- If average revenue per user = $40/month
+- Required paying users: 425 users
+- With 10% conversion from free tier: Need ~4,250 total users
+
+## Overview
+
+The Mock Interview Agent System is a comprehensive AI-powered interview platform that processes candidate resumes, conducts adaptive multi-dimensional interviews, and provides detailed assessments. The system consists of four main subsystems:
+
+1. **Resume Processing Pipeline**: Handles PDF upload, text extraction, parsing, and storage
+2. **Interview Agent**: LLM-based conversational agent that conducts interviews
+3. **Assessment Engine**: Multi-dimensional evaluation system for candidate responses
+4. **Storage Layer**: Dual storage with user database for structured data and vector database for semantic search
+
+The system supports multiple interview types (HR behavioral, technical deep-dive, coding assessment, stress scenarios) and dynamically adapts questions based on resume content and conversation context.
+
 ## Architecture
 
 ### Use Case Diagram
 
 ```mermaid
-graph TB
-    subgraph "Actors"
-        Candidate[Candidate]
-        Interviewer[Interviewer/HR]
-        Admin[System Administrator]
-    end
+graph LR
+    Candidate[👤 Candidate]
+    Interviewer[👤 Interviewer/HR]
+    Admin[👤 System Administrator]
     
-    subgraph "Use Cases"
-        UC1[Upload Resume]
-        UC2[Start Interview]
-        UC3[Answer Questions]
-        UC4[Submit Code Solution]
-        UC5[Ask Clarifying Questions]
-        UC6[View Assessment Report]
-        UC7[Search Interview History]
-        UC8[Configure Interview Types]
-        UC9[Monitor System Performance]
-        UC10[Manage Candidate Data]
-    end
-    
-    subgraph "System"
-        System[Mock Interview Agent System]
-    end
+    UC1[Upload Resume]
+    UC2[Start Interview]
+    UC3[Answer Questions]
+    UC4[Submit Code Solution]
+    UC5[Ask Clarifying Questions]
+    UC6[View Assessment Report]
+    UC7[Search Interview History]
+    UC8[Configure Interview Types]
+    UC9[Monitor System Performance]
+    UC10[Manage Candidate Data]
     
     Candidate --> UC1
     Candidate --> UC2
@@ -54,17 +363,6 @@ graph TB
     Admin --> UC8
     Admin --> UC9
     Admin --> UC10
-    
-    UC1 --> System
-    UC2 --> System
-    UC3 --> System
-    UC4 --> System
-    UC5 --> System
-    UC6 --> System
-    UC7 --> System
-    UC8 --> System
-    UC9 --> System
-    UC10 --> System
     
     UC2 -.includes.-> UC1
     UC3 -.extends.-> UC5
