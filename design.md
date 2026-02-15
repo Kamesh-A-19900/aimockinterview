@@ -13,6 +13,411 @@ The system supports multiple interview types (HR behavioral, technical deep-dive
 
 ## Architecture
 
+### Use Case Diagram
+
+```mermaid
+graph TB
+    subgraph "Actors"
+        Candidate[Candidate]
+        Interviewer[Interviewer/HR]
+        Admin[System Administrator]
+    end
+    
+    subgraph "Use Cases"
+        UC1[Upload Resume]
+        UC2[Start Interview]
+        UC3[Answer Questions]
+        UC4[Submit Code Solution]
+        UC5[Ask Clarifying Questions]
+        UC6[View Assessment Report]
+        UC7[Search Interview History]
+        UC8[Configure Interview Types]
+        UC9[Monitor System Performance]
+        UC10[Manage Candidate Data]
+    end
+    
+    subgraph "System"
+        System[Mock Interview Agent System]
+    end
+    
+    Candidate --> UC1
+    Candidate --> UC2
+    Candidate --> UC3
+    Candidate --> UC4
+    Candidate --> UC5
+    Candidate --> UC6
+    
+    Interviewer --> UC6
+    Interviewer --> UC7
+    Interviewer --> UC10
+    
+    Admin --> UC8
+    Admin --> UC9
+    Admin --> UC10
+    
+    UC1 --> System
+    UC2 --> System
+    UC3 --> System
+    UC4 --> System
+    UC5 --> System
+    UC6 --> System
+    UC7 --> System
+    UC8 --> System
+    UC9 --> System
+    UC10 --> System
+    
+    UC2 -.includes.-> UC1
+    UC3 -.extends.-> UC5
+    UC4 -.extends.-> UC3
+```
+
+### Detailed Use Case Descriptions
+
+**UC1: Upload Resume**
+- Actor: Candidate
+- Description: Candidate uploads their resume in PDF format for processing
+- Preconditions: None
+- Postconditions: Resume is parsed and stored in the system
+- Main Flow:
+  1. Candidate selects PDF file
+  2. System validates file format
+  3. System extracts and parses resume data
+  4. System stores structured data
+  5. System confirms successful upload
+
+**UC2: Start Interview**
+- Actor: Candidate
+- Description: Candidate initiates an interview session
+- Preconditions: Resume must be uploaded
+- Postconditions: Interview session is created and first question is presented
+- Main Flow:
+  1. Candidate selects interview type
+  2. System retrieves candidate's resume data
+  3. System initializes interview session
+  4. System generates first question based on resume
+  5. System presents question to candidate
+
+**UC3: Answer Questions**
+- Actor: Candidate
+- Description: Candidate responds to interview questions
+- Preconditions: Interview session must be active
+- Postconditions: Answer is analyzed and next question is generated
+- Main Flow:
+  1. Candidate provides answer
+  2. System analyzes answer quality
+  3. System updates conversation context
+  4. System generates next question based on answer
+  5. System presents next question
+
+**UC4: Submit Code Solution**
+- Actor: Candidate
+- Description: Candidate submits code for a coding challenge
+- Preconditions: Coding round must be active
+- Postconditions: Code is analyzed and follow-up questions are generated
+- Main Flow:
+  1. Candidate writes code solution
+  2. Candidate submits code
+  3. System analyzes logic and complexity
+  4. System generates questions about design decisions
+  5. System presents follow-up questions
+
+**UC5: Ask Clarifying Questions**
+- Actor: Candidate
+- Description: Candidate asks questions to clarify interview questions
+- Preconditions: Interview session must be active
+- Postconditions: Clarification is provided and engagement is recorded
+- Main Flow:
+  1. Candidate asks clarifying question
+  2. System records engagement behavior
+  3. System provides clarification
+  4. System continues interview
+
+**UC6: View Assessment Report**
+- Actor: Candidate, Interviewer
+- Description: View comprehensive assessment report after interview
+- Preconditions: Interview session must be completed
+- Postconditions: Report is displayed
+- Main Flow:
+  1. User requests assessment report
+  2. System retrieves interview data
+  3. System generates comprehensive report
+  4. System displays scores, strengths, weaknesses
+
+**UC7: Search Interview History**
+- Actor: Interviewer
+- Description: Search through past interviews using semantic search
+- Preconditions: Interview data must exist in vector database
+- Postconditions: Relevant interviews are displayed
+- Main Flow:
+  1. Interviewer enters search query
+  2. System performs semantic search
+  3. System returns relevant interviews
+  4. Interviewer reviews results
+
+**UC8: Configure Interview Types**
+- Actor: System Administrator
+- Description: Configure and customize interview types and dimensions
+- Preconditions: Admin access
+- Postconditions: Interview configuration is updated
+- Main Flow:
+  1. Admin accesses configuration
+  2. Admin modifies interview parameters
+  3. System validates configuration
+  4. System applies changes
+
+**UC9: Monitor System Performance**
+- Actor: System Administrator
+- Description: Monitor system health and performance metrics
+- Preconditions: Admin access
+- Postconditions: Performance data is displayed
+- Main Flow:
+  1. Admin accesses monitoring dashboard
+  2. System displays metrics
+  3. Admin reviews performance
+  4. Admin takes action if needed
+
+**UC10: Manage Candidate Data**
+- Actor: Interviewer, System Administrator
+- Description: View, update, or delete candidate data
+- Preconditions: Appropriate access permissions
+- Postconditions: Candidate data is modified
+- Main Flow:
+  1. User searches for candidate
+  2. System displays candidate data
+  3. User performs action (view/update/delete)
+  4. System updates records
+
+### Wireframes
+
+#### Resume Upload Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent                          [Profile] [?] │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│                    Upload Your Resume                         │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                                                         │  │
+│  │              [📄 Drag & Drop PDF Here]                 │  │
+│  │                       or                                │  │
+│  │                 [Choose File Button]                    │  │
+│  │                                                         │  │
+│  │              Accepted format: PDF only                  │  │
+│  │              Maximum size: 10MB                         │  │
+│  │                                                         │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Recent Uploads:                                              │
+│  • resume_v2.pdf - Uploaded 2 days ago ✓                     │
+│  • john_doe_resume.pdf - Uploaded 1 week ago ✓               │
+│                                                               │
+│                        [Continue →]                           │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Interview Type Selection Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent                          [Profile] [?] │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│              Select Interview Type                            │
+│                                                               │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
+│  │   HR Behavioral          │  │  Technical Deep-Dive     │  │
+│  │                          │  │                          │  │
+│  │  • Communication skills  │  │  • Project discussion    │  │
+│  │  • Cultural fit          │  │  • Technical depth       │  │
+│  │  • Soft skills           │  │  • Architecture          │  │
+│  │                          │  │                          │  │
+│  │  Duration: ~30 min       │  │  Duration: ~45 min       │  │
+│  │                          │  │                          │  │
+│  │    [Start Interview]     │  │    [Start Interview]     │  │
+│  └─────────────────────────┘  └─────────────────────────┘  │
+│                                                               │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
+│  │  Coding Assessment       │  │  Stress Interview        │  │
+│  │                          │  │                          │  │
+│  │  • Logic & algorithms    │  │  • Pressure handling     │  │
+│  │  • Problem solving       │  │  • Quick thinking        │  │
+│  │  • Code complexity       │  │  • Composure             │  │
+│  │                          │  │                          │  │
+│  │  Duration: ~60 min       │  │  Duration: ~30 min       │  │
+│  │                          │  │                          │  │
+│  │    [Start Interview]     │  │    [Start Interview]     │  │
+│  └─────────────────────────┘  └─────────────────────────┘  │
+│                                                               │
+│                    [← Back]                                   │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Interview Session Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent - HR Behavioral      [Pause] [End] [?] │
+├─────────────────────────────────────────────────────────────┤
+│  Progress: ████████░░░░░░░░ 8/15 questions    Time: 18:32   │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Question 8:                                                  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ I see from your resume that you worked on a machine    │  │
+│  │ learning project for customer segmentation. Can you    │  │
+│  │ describe a challenging situation you faced during this │  │
+│  │ project and how you overcame it?                       │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Your Answer:                                                 │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                                                         │  │
+│  │ [Type your answer here...]                             │  │
+│  │                                                         │  │
+│  │                                                         │  │
+│  │                                                         │  │
+│  │                                                         │  │
+│  │                                                         │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  [🎤 Voice Input]  [Need Clarification?]    [Submit Answer →]│
+│                                                               │
+│  Previous Questions:                                          │
+│  • Q7: Tell me about your leadership experience...           │
+│  • Q6: How do you handle conflicts in a team?...             │
+│  • Q5: Describe your communication style...                  │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Coding Challenge Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent - Coding Round       [Pause] [End] [?] │
+├─────────────────────────────────────────────────────────────┤
+│  Problem 1 of 3                            Time: 28:15       │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Problem: Binary Tree Maximum Path Sum                        │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ Given a binary tree, find the maximum path sum. The    │  │
+│  │ path may start and end at any node in the tree.        │  │
+│  │                                                         │  │
+│  │ Example:                                                │  │
+│  │   Input: root = [1,2,3]                                │  │
+│  │   Output: 6 (2 -> 1 -> 3)                              │  │
+│  │                                                         │  │
+│  │ Constraints:                                            │  │
+│  │ • Number of nodes: [1, 3 * 10^4]                       │  │
+│  │ • Node values: [-1000, 1000]                           │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Your Solution:                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ 1  def maxPathSum(root):                               │  │
+│  │ 2      # Write your solution here                      │  │
+│  │ 3      max_sum = float('-inf')                         │  │
+│  │ 4                                                       │  │
+│  │ 5      def dfs(node):                                  │  │
+│  │ 6          if not node:                                │  │
+│  │ 7              return 0                                │  │
+│  │ 8          |                                            │  │
+│  │ 9                                                       │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  [Run Tests]  [Ask Question]              [Submit Solution →]│
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Assessment Report Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent                          [Profile] [?] │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│              Assessment Report - John Doe                     │
+│              Interview Date: Jan 15, 2024                     │
+│              Type: Technical Deep-Dive                        │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │         Overall Score: 78/100                          │  │
+│  │                                                         │  │
+│  │         ████████████████████░░░░░░░░                   │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Dimension Scores:                                            │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ Communication Skills        ████████████████░░ 82/100  │  │
+│  │ Technical Knowledge         ███████████████░░░ 75/100  │  │
+│  │ Project Understanding       ████████████████░░ 80/100  │  │
+│  │ Logical Thinking            ██████████████░░░░ 72/100  │  │
+│  │ Confidence                  ████████████████░░ 81/100  │  │
+│  │ Engagement                  ███████████████░░░ 76/100  │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Strengths:                                                   │
+│  ✓ Excellent communication and articulation                  │
+│  ✓ Strong understanding of project architecture              │
+│  ✓ Confident in discussing technical decisions               │
+│  ✓ Good engagement with follow-up questions                  │
+│                                                               │
+│  Areas for Improvement:                                       │
+│  ⚠ Could improve algorithmic complexity analysis             │
+│  ⚠ Consider edge cases more thoroughly                       │
+│  ⚠ Deepen knowledge of distributed systems                   │
+│                                                               │
+│  Recommendations:                                             │
+│  • Practice more algorithm optimization problems             │
+│  • Study system design patterns for scalability              │
+│  • Continue developing strong communication skills           │
+│                                                               │
+│  [Download PDF]  [Share Report]  [Schedule Follow-up]        │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Interview History & Search Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Mock Interview Agent - Dashboard              [Profile] [?] │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Search Interviews:                                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ 🔍 Search by candidate, skills, or keywords...        │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Filters: [All Types ▾] [Last 30 Days ▾] [Score: All ▾]     │
+│                                                               │
+│  Recent Interviews:                                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ John Doe                              Score: 78/100    │  │
+│  │ Technical Deep-Dive • Jan 15, 2024                     │  │
+│  │ Skills: Python, ML, System Design                      │  │
+│  │ [View Report] [View Transcript]                        │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ Jane Smith                            Score: 85/100    │  │
+│  │ HR Behavioral • Jan 14, 2024                           │  │
+│  │ Skills: Leadership, Communication, Project Management  │  │
+│  │ [View Report] [View Transcript]                        │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ Mike Johnson                          Score: 72/100    │  │
+│  │ Coding Assessment • Jan 13, 2024                       │  │
+│  │ Skills: JavaScript, React, Algorithms                  │  │
+│  │ [View Report] [View Transcript]                        │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  [Load More...]                                               │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ### High-Level Architecture
 
 ```mermaid
