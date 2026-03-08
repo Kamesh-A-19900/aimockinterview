@@ -16,11 +16,13 @@
 const { getGroqService } = require('../services/groqService');
 const { chromaService } = require('../services/chromaService');
 const { getIntegrityChecker } = require('../services/integrityChecker');
+const { getRateLimitService } = require('../services/rateLimitService');
 
 class EvaluatorAgent {
   constructor() {
     this.groq = getGroqService();
     this.model = 'llama-3.3-70b-versatile'; // Accurate (updated model)
+    this.rateLimiter = getRateLimitService();
   }
   
   /**
@@ -55,17 +57,26 @@ class EvaluatorAgent {
         return cachedEval;
       }
       
+      // Handle long conversations by chunking if needed
+      let processedQAPairs = qaPairs;
+      if (qaPairs.length > 15) {
+        console.log(`⚠️  Long conversation detected (${qaPairs.length} Q&A pairs), using chunked evaluation`);
+        processedQAPairs = this.chunkLongConversation(qaPairs);
+      }
+      
       // Generate evaluation
-      const prompt = this.buildPrompt(qaPairs);
+      const prompt = this.buildPrompt(processedQAPairs);
       
       const startTime = Date.now();
       
-      const response = await this.groq.client.chat.completions.create({
-        model: this.model,
-        messages: [{role: 'user', content: prompt}],
-        temperature: 0, // Deterministic
-        max_tokens: 1500
-      });
+      const response = await this.rateLimiter.queueRequest(async () => {
+        return await this.groq.client.chat.completions.create({
+          model: this.model,
+          messages: [{role: 'user', content: prompt}],
+          temperature: 0, // Deterministic
+          max_tokens: 1500
+        });
+      }, userId, 2000); // Higher token estimate for evaluation
       
       const duration = Date.now() - startTime;
       console.log(`✅ Evaluator Agent: Generated evaluation in ${duration}ms`);
@@ -129,7 +140,7 @@ class EvaluatorAgent {
       }
       
       // Self-correction loop
-      const correctedEval = await this.reviewAndCorrect(evaluation, qaPairs);
+      const correctedEval = await this.reviewAndCorrect(evaluation, processedQAPairs);
       
       // Cache evaluation - PRIVATE per user
       await this.cacheEvaluation(qaPairs, correctedEval, userId);
@@ -150,6 +161,46 @@ class EvaluatorAgent {
   }
   
   /**
+   * Chunk long conversations for better evaluation
+   * @param {Array} qaPairs - Question-answer pairs
+   * @returns {Array} Chunked Q&A pairs
+   */
+  chunkLongConversation(qaPairs) {
+    // For long conversations, focus on:
+    // 1. First 3 Q&A pairs (opening)
+    // 2. Last 3 Q&A pairs (closing)
+    // 3. Most substantial answers in between (by length)
+    
+    if (qaPairs.length <= 10) {
+      return qaPairs;
+    }
+    
+    const chunked = [];
+    
+    // Add first 3 pairs
+    chunked.push(...qaPairs.slice(0, 3));
+    
+    // Add most substantial middle answers
+    if (qaPairs.length > 6) {
+      const middlePairs = qaPairs.slice(3, -3);
+      
+      // Sort by answer length and take top 4
+      const substantialPairs = middlePairs
+        .filter(qa => qa.answer && qa.answer.length > 50)
+        .sort((a, b) => (b.answer?.length || 0) - (a.answer?.length || 0))
+        .slice(0, 4);
+      
+      chunked.push(...substantialPairs);
+    }
+    
+    // Add last 3 pairs
+    chunked.push(...qaPairs.slice(-3));
+    
+    console.log(`📊 Chunked conversation: ${qaPairs.length} → ${chunked.length} Q&A pairs`);
+    return chunked;
+  }
+  
+  /**
    * Build prompt for evaluation
    * @param {Array} qaPairs - Question-answer pairs
    * @returns {string} Prompt
@@ -159,38 +210,72 @@ class EvaluatorAgent {
       `Q${i + 1}: ${qa.question}\nA${i + 1}: ${qa.answer || 'No answer provided'}`
     ).join('\n\n');
     
-    return `You are an objective interview evaluator. Analyze the candidate's performance based on this Q&A transcript.
+    return `You are a STRICT and PROFESSIONAL interview evaluator with 15+ years of experience. You evaluate candidates for top-tier tech companies and maintain HIGH STANDARDS.
 
 Interview Transcript:
 ${transcript}
 
-Evaluation Rubric:
-1. Communication (0-100): Clarity, articulation, structure of responses
-2. Correctness (0-100): Technical accuracy and depth of knowledge
-3. Confidence (0-100): Assertiveness and conviction in answers
-4. Stress Handling (0-100): Composure and adaptability under pressure
+STRICT EVALUATION CRITERIA:
 
-For each dimension:
-- Provide a score (0-100)
-- Extract an exact quote from the transcript as evidence
-- Explain your reasoning (2-3 sentences)
+1. Communication (0-100):
+   - 90-100: Exceptional clarity, perfect structure, executive-level articulation
+   - 70-89: Good communication with minor issues
+   - 50-69: Average communication, some unclear points
+   - 30-49: Poor communication, hard to follow
+   - 0-29: Very poor, incoherent responses
+
+2. Correctness (0-100):
+   - 90-100: Technically perfect, demonstrates deep expertise
+   - 70-89: Mostly correct with minor gaps
+   - 50-69: Some correct points but significant gaps
+   - 30-49: More wrong than right, fundamental misunderstandings
+   - 0-29: Mostly incorrect or no technical content
+
+3. Confidence (0-100):
+   - 90-100: Extremely confident, decisive, leadership presence
+   - 70-89: Generally confident with occasional hesitation
+   - 50-69: Moderate confidence, some uncertainty
+   - 30-49: Lacks confidence, frequent hesitation
+   - 0-29: Very uncertain, no conviction
+
+4. Stress Handling (0-100):
+   - 90-100: Thrives under pressure, maintains composure perfectly
+   - 70-89: Handles pressure well with minor stress signs
+   - 50-69: Adequate stress handling, some visible pressure
+   - 30-49: Struggles with pressure, affects performance
+   - 0-29: Cannot handle pressure, breaks down
+
+HARSH REALITY CHECKS:
+- One-word answers = automatic 20-30 points deduction
+- Vague responses without specifics = major penalty
+- "I don't know" without follow-up = significant deduction
+- Generic answers that could apply to anyone = low scores
+- No concrete examples or metrics = major penalty
+- Unprofessional language or attitude = severe penalty
+
+SCORING PHILOSOPHY:
+- 50/100 is AVERAGE, not good
+- 70+ requires STRONG performance with specific examples
+- 80+ requires EXCEPTIONAL performance with quantified results
+- 90+ is reserved for OUTSTANDING candidates who exceed expectations
+- Be TOUGH but FAIR - this is a competitive job market
 
 Calculate overall_score as the average of the 4 dimensions.
 
-Provide comprehensive feedback:
-- Overall feedback (3-4 sentences)
-- Strengths: List 3-5 specific strengths demonstrated (array of strings)
-- Weaknesses: List 3-5 areas for improvement (array of strings)
-- Recommendations: List 3-5 actionable recommendations (array of strings)
+Provide HONEST and CONSTRUCTIVE feedback:
+- Overall feedback (7-8 sentences, be direct about weaknesses)
+- Strengths: List 2-4 GENUINE strengths (only if truly demonstrated)
+- Weaknesses: List 3-6 specific areas needing improvement
+- Recommendations: List 4-6 actionable steps for improvement
 
 CRITICAL RULES:
-1. Scores must be justified by actual quotes from the transcript
-2. Quotes must be EXACT (word-for-word from transcript)
-3. Be objective and evidence-based
-4. No hallucinations or invented information
-5. If answer is missing, score that dimension lower
-6. Strengths, weaknesses, and recommendations must be specific and actionable
-7. Output MUST be valid JSON only - no markdown, no code blocks, no extra text
+1. BE STRICT - Don't inflate scores
+2. Quotes must be EXACT from transcript
+3. No participation trophies - earn your score
+4. If answer is weak/missing, score accordingly
+5. Look for SPECIFICS, EXAMPLES, and QUANTIFIED RESULTS
+6. Professional standards matter - evaluate like a real interview
+7. Output MUST be valid JSON only
 
 Output format (VALID JSON ONLY):
 {
@@ -200,7 +285,7 @@ Output format (VALID JSON ONLY):
   "stress_handling_score": number,
   "overall_score": number,
   "feedback_text": "string",
-  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "strengths": ["strength 1", "strength 2"],
   "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
   "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
   "evidence": {
@@ -244,12 +329,14 @@ Output JSON:
   "corrected_evaluation": object (only if has_issues is true)
 }`;
       
-      const response = await this.groq.client.chat.completions.create({
-        model: this.model,
-        messages: [{role: 'user', content: reviewPrompt}],
-        temperature: 0,
-        max_tokens: 1000
-      });
+      const response = await this.rateLimiter.queueRequest(async () => {
+        return await this.groq.client.chat.completions.create({
+          model: this.model,
+          messages: [{role: 'user', content: reviewPrompt}],
+          temperature: 0,
+          max_tokens: 1000
+        });
+      }, 'system', 1500); // System user for review calls
       
       const content = response.choices[0].message.content.trim();
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -325,13 +412,108 @@ Output JSON:
   getFallbackEvaluation(qaPairs) {
     console.log('⚠️  Using fallback evaluation');
     
-    // Simple heuristic-based evaluation
+    // Analyze the actual interview content for more personalized feedback
     const answeredCount = qaPairs.filter(qa => qa.answer && qa.answer.length > 50).length;
     const totalCount = qaPairs.length;
     const answerRate = answeredCount / totalCount;
     
-    // Base score on answer rate and length
-    const baseScore = Math.round(answerRate * 70); // Max 70 for fallback
+    // Analyze answer characteristics
+    const answers = qaPairs.filter(qa => qa.answer).map(qa => qa.answer);
+    const avgAnswerLength = answers.reduce((sum, ans) => sum + ans.length, 0) / answers.length || 0;
+    const shortAnswers = answers.filter(ans => ans.length < 100).length;
+    const hasExamples = answers.some(ans => ans.toLowerCase().includes('example') || ans.toLowerCase().includes('for instance'));
+    const hasNumbers = answers.some(ans => /\d+/.test(ans));
+    const hasUncertainty = answers.some(ans => ans.toLowerCase().includes("i don't know") || ans.toLowerCase().includes("not sure"));
+    
+    // Generate dynamic weaknesses based on content analysis
+    const dynamicWeaknesses = [];
+    const dynamicRecommendations = [];
+    const dynamicStrengths = [];
+    
+    // Analyze content for personalized feedback
+    if (shortAnswers > answers.length * 0.6) {
+      dynamicWeaknesses.push('Responses tend to be brief and lack detailed explanations');
+      dynamicRecommendations.push('Provide more comprehensive answers with specific details');
+    }
+    
+    if (!hasExamples) {
+      dynamicWeaknesses.push('Limited use of concrete examples to support points');
+      dynamicRecommendations.push('Include specific examples from your experience to illustrate your points');
+    } else {
+      dynamicStrengths.push('Uses examples to support responses');
+    }
+    
+    if (!hasNumbers) {
+      dynamicWeaknesses.push('Lacks quantifiable metrics or specific data points');
+      dynamicRecommendations.push('Include specific numbers, percentages, or metrics when discussing achievements');
+    } else {
+      dynamicStrengths.push('Incorporates quantifiable information in responses');
+    }
+    
+    if (hasUncertainty) {
+      dynamicWeaknesses.push('Shows uncertainty in responses without providing alternatives');
+      dynamicRecommendations.push('When unsure, acknowledge it but offer your best understanding or approach');
+    }
+    
+    if (avgAnswerLength > 200) {
+      dynamicStrengths.push('Provides detailed and comprehensive responses');
+    }
+    
+    if (answerRate > 0.8) {
+      dynamicStrengths.push('Consistently engaged throughout the interview');
+    }
+    
+    // Analyze question types for targeted feedback
+    const questions = qaPairs.map(qa => qa.question.toLowerCase());
+    const hasTechnicalQuestions = questions.some(q => 
+      q.includes('technical') || q.includes('code') || q.includes('algorithm') || 
+      q.includes('system') || q.includes('database') || q.includes('programming')
+    );
+    const hasBehavioralQuestions = questions.some(q => 
+      q.includes('tell me about') || q.includes('describe a time') || 
+      q.includes('how do you handle') || q.includes('experience with')
+    );
+    
+    if (hasTechnicalQuestions) {
+      dynamicRecommendations.push('Review technical concepts and practice explaining complex topics clearly');
+    }
+    
+    if (hasBehavioralQuestions) {
+      dynamicRecommendations.push('Practice the STAR method (Situation, Task, Action, Result) for behavioral questions');
+    }
+    
+    // Ensure we have minimum content
+    if (dynamicWeaknesses.length === 0) {
+      dynamicWeaknesses.push('Consider providing more structured responses');
+    }
+    if (dynamicRecommendations.length === 0) {
+      dynamicRecommendations.push('Focus on clear and organized communication');
+    }
+    if (dynamicStrengths.length === 0) {
+      dynamicStrengths.push('Completed the interview session');
+    }
+    
+    // Base score on answer rate and content quality
+    let baseScore = Math.round(answerRate * 60); // Start with participation
+    if (avgAnswerLength > 150) baseScore += 10; // Bonus for detailed answers
+    if (hasExamples) baseScore += 5; // Bonus for examples
+    if (hasNumbers) baseScore += 5; // Bonus for metrics
+    baseScore = Math.min(baseScore, 75); // Cap fallback scores at 75
+    
+    // Generate personalized feedback text
+    const feedbackParts = [
+      `Completed ${answeredCount} out of ${totalCount} questions with an average response length of ${Math.round(avgAnswerLength)} characters.`
+    ];
+    
+    if (answerRate > 0.7) {
+      feedbackParts.push('Demonstrated good engagement throughout the interview.');
+    } else {
+      feedbackParts.push('Consider providing responses to all questions for a complete evaluation.');
+    }
+    
+    if (avgAnswerLength < 100) {
+      feedbackParts.push('Responses could benefit from more detailed explanations and examples.');
+    }
     
     return {
       communication_score: baseScore,
@@ -339,43 +521,28 @@ Output JSON:
       confidence_score: baseScore,
       stress_handling_score: baseScore,
       overall_score: baseScore,
-      feedback_text: `Completed ${answeredCount} out of ${totalCount} questions. ${
-        answerRate > 0.7 
-          ? 'Good participation and engagement.' 
-          : 'Consider providing more detailed responses in future interviews.'
-      }`,
-      strengths: [
-        'Completed the interview session',
-        'Provided responses to questions',
-        'Demonstrated engagement with the process'
-      ],
-      weaknesses: [
-        'Some responses could be more detailed',
-        'Consider providing more specific examples',
-        'Work on elaborating technical concepts'
-      ],
-      recommendations: [
-        'Practice the STAR method for behavioral questions',
-        'Prepare specific examples from your experience',
-        'Review technical concepts before interviews',
-        'Focus on clear and structured communication'
-      ],
+      feedback_text: feedbackParts.join(' '),
+      strengths: dynamicStrengths.slice(0, 4), // Limit to 4 strengths
+      weaknesses: dynamicWeaknesses.slice(0, 5), // Limit to 5 weaknesses
+      recommendations: dynamicRecommendations.slice(0, 6), // Limit to 6 recommendations
       evidence: {
         communication: {
-          quote: qaPairs[0]?.answer?.substring(0, 100) || 'No answer',
-          reasoning: 'Based on overall response quality'
+          quote: qaPairs[0]?.answer?.substring(0, 100) || 'No answer provided',
+          reasoning: `Based on response clarity and average length of ${Math.round(avgAnswerLength)} characters`
         },
         correctness: {
-          quote: qaPairs[0]?.answer?.substring(0, 100) || 'No answer',
-          reasoning: 'Based on answer completeness'
+          quote: qaPairs.find(qa => qa.answer && qa.answer.length > 50)?.answer?.substring(0, 100) || 'Limited content',
+          reasoning: 'Based on answer completeness and detail level'
         },
         confidence: {
-          quote: qaPairs[0]?.answer?.substring(0, 100) || 'No answer',
-          reasoning: 'Based on response assertiveness'
+          quote: hasUncertainty ? 
+            answers.find(ans => ans.toLowerCase().includes("i don't know"))?.substring(0, 100) || 'Shows some uncertainty' :
+            qaPairs[Math.floor(qaPairs.length/2)]?.answer?.substring(0, 100) || 'Moderate confidence',
+          reasoning: hasUncertainty ? 'Shows uncertainty in responses' : 'Based on response assertiveness'
         },
         stress_handling: {
-          quote: qaPairs[0]?.answer?.substring(0, 100) || 'No answer',
-          reasoning: 'Based on interview completion'
+          quote: qaPairs[qaPairs.length-1]?.answer?.substring(0, 100) || 'Completed interview',
+          reasoning: `Maintained engagement through ${totalCount} questions`
         }
       }
     };

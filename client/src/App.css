@@ -1,52 +1,17 @@
+/* Professional Dark Theme - No theme switching needed */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-:root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --dark: #1f2937;
-  --light: #f9fafb;
-  --gray: #6b7280;
-  --border: #e5e7eb;
-  
-  /* Light theme colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --card-bg: #ffffff;
-  --input-bg: #ffffff;
-  --input-border: #e5e7eb;
-}
-
-/* Dark theme */
-[data-theme="dark"] {
-  --bg-primary: #1f2937;
-  --bg-secondary: #111827;
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --card-bg: #374151;
-  --input-bg: #374151;
-  --input-border: #4b5563;
-  --border: #4b5563;
-}
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--bg-secondary);
+  background: var(--bg-base);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.6;
 }
 
 /* Hide Navbar and Footer when interview is active */
@@ -64,6 +29,7 @@ body.interview-active .interview-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-base);
 }
 
 /* Gradient Backgrounds */
@@ -78,45 +44,7 @@ body.interview-active .interview-page {
   background-clip: text;
 }
 
-/* Buttons */
-.btn {
-  padding: 12px 24px;
-  border-radius: 8px;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-}
-
-.btn-secondary {
-  background: white;
-  color: var(--primary);
-  border: 2px solid var(--primary);
-}
-
-.btn-secondary:hover {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-large {
-  padding: 16px 32px;
-  font-size: 18px;
-}
+/* Legacy button styles removed - using globals.css button styles instead */
 
 /* Cards */
 .card {
@@ -211,34 +139,15 @@ body.interview-active .interview-page {
   animation: slideIn 0.6s ease-out;
 }
 
-/* Loading Spinner */
-.spinner {
-  border: 3px solid var(--border);
-  border-top: 3px solid var(--primary);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 20px auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Simple loading message styles */
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .btn {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-  
-  .btn-large {
-    padding: 14px 28px;
-    font-size: 16px;
-  }
-  
   .card {
     padding: 16px;
   }

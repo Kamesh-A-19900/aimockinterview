@@ -50,48 +50,74 @@ function SignIn() {
     }
   };
 
+  const errorId = error ? "signin-error" : undefined;
+
   return (
     <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-card">
-          <h1 className="auth-title">Welcome Back</h1>
-          <p className="auth-subtitle">Sign in to continue your interview practice</p>
+      <div className="auth-left">
+        <div className="auth-left-glow"></div>
+        <Link to="/" className="auth-brand">
+          <div className="auth-brand-icon">🎯</div>
+          MockInterview<span style={{color: 'var(--brand)'}}>AI</span>
+        </Link>
+        <div className="auth-testimonial">
+          <p className="auth-testimonial-quote">
+            "I landed my SWE role at a top startup after 2 weeks of practicing here. The AI doesn't let you get away with vague answers."
+          </p>
+          <div className="auth-testimonial-author">
+            <div className="auth-testimonial-avatar">AM</div>
+            <div>
+              <p className="auth-testimonial-name">Arjun M.</p>
+              <p className="auth-testimonial-role">Software Engineer — got the offer</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {error && <div className="alert alert-error">{error}</div>}
+      <div className="auth-right">
+        <div className="auth-form-container">
+          <h1 className="auth-form-title">Welcome Back</h1>
+          <p className="auth-form-subtitle">Sign in to continue your interview practice</p>
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          {error && <div id="signin-error" className="alert alert-error" role="alert">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Email</label>
+              <label htmlFor="email" className="form-label">Email</label>
               <input
+                id="email"
                 type="email"
                 name="email"
-                className="form-input"
+                className="input"
                 placeholder="your@email.com"
                 value={formData.email}
                 onChange={handleChange}
+                aria-describedby={errorId}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Password</label>
+              <label htmlFor="password" className="form-label">Password</label>
               <input
+                id="password"
                 type="password"
                 name="password"
-                className="form-input"
+                className="input"
                 placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
+                aria-describedby={errorId}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            <button type="submit" className="btn-primary" style={{width: '100%', marginTop: '8px'}} disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="auth-footer">
+          <p className="auth-footer-text">
             Don't have an account? <Link to="/signup" className="auth-link">Sign Up</Link>
           </p>
         </div>

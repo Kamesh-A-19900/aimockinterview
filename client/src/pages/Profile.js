@@ -163,9 +163,8 @@ function Profile() {
     return (
       <div className="profile-page">
         <div className="container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading profile...</p>
+          <div className="loading-message">
+            <p>Loading...</p>
           </div>
         </div>
       </div>

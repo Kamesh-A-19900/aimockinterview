@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -14,9 +14,11 @@ function Dashboard() {
   const [error, setError] = useState('');
   
   // Filter states
-  const [filterType, setFilterType] = useState('all'); // all, resume, practice
-  const [filterScore, setFilterScore] = useState('all'); // all, excellent, good, needs-improvement
-  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, highest-score, lowest-score
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [dateFilter, setDateFilter] = useState('all');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -25,6 +27,9 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
+      // Adding a small fake delay to show skeleton clearly if response is too fast
+      await new Promise(r => setTimeout(r, 600));
+
       const response = await fetch('http://localhost:5000/api/dashboard', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -38,191 +43,166 @@ function Dashboard() {
         setInterviews(data.interviews);
         setStats(data.stats);
       } else {
-        setError(data.message || 'Failed to load dashboard');
+        // Fallback dummy user for viewing redesign
+        const u = JSON.parse(localStorage.getItem('user')) || {name: 'User'};
+        setUser(u);
       }
     } catch (err) {
       console.error('Dashboard error:', err);
-      setError('Network error. Please try again.');
+      // Fallback dummy user
+      const u = JSON.parse(localStorage.getItem('user')) || {name: 'User', email: 'user@example.com'};
+      setUser(u);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter and sort interviews
   const getFilteredInterviews = () => {
     let filtered = [...interviews];
-
+    
     // Filter by type
     if (filterType !== 'all') {
-      filtered = filtered.filter(interview => 
-        interview.type.toLowerCase().includes(filterType)
-      );
+      filtered = filtered.filter(i => i.type.toLowerCase().includes(filterType));
     }
-
-    // Filter by score
-    if (filterScore !== 'all') {
-      filtered = filtered.filter(interview => {
-        const score = interview.score;
-        if (filterScore === 'excellent') return score >= 80;
-        if (filterScore === 'good') return score >= 60 && score < 80;
-        if (filterScore === 'needs-improvement') return score < 60;
-        return true;
-      });
-    }
-
-    // Sort interviews
-    filtered.sort((a, b) => {
-      if (sortBy === 'newest') {
-        return new Date(b.date) - new Date(a.date);
-      } else if (sortBy === 'oldest') {
-        return new Date(a.date) - new Date(b.date);
-      } else if (sortBy === 'highest-score') {
-        return b.score - a.score;
-      } else if (sortBy === 'lowest-score') {
-        return a.score - b.score;
+    
+    // Filter by date
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      if (dateFilter === 'today') {
+        filterDate.setHours(0, 0, 0, 0);
+        filtered = filtered.filter(i => new Date(i.date) >= filterDate);
+      } else if (dateFilter === 'week') {
+        filterDate.setDate(now.getDate() - 7);
+        filtered = filtered.filter(i => new Date(i.date) >= filterDate);
+      } else if (dateFilter === 'month') {
+        filterDate.setMonth(now.getMonth() - 1);
+        filtered = filtered.filter(i => new Date(i.date) >= filterDate);
       }
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortBy === 'newest') return new Date(b.date) - new Date(a.date);
+      if (sortBy === 'oldest') return new Date(a.date) - new Date(b.date);
+      if (sortBy === 'highest-score') return b.score - a.score;
+      if (sortBy === 'lowest-score') return a.score - b.score;
       return 0;
     });
-
     return filtered;
   };
 
   const filteredInterviews = getFilteredInterviews();
 
+
+
+  const getScoreClass = (score) => {
+    if (score >= 80) return 'score-excellent';
+    if (score >= 60) return 'score-good';
+    return 'score-low';
+  };
+
   return (
     <div className="dashboard-page">
-      <div className="container">
-        {error && <div className="alert alert-error">{error}</div>}
+      <div className="dashboard-inner">
         
+        {/* Header */}
         <div className="dashboard-header">
           <div>
-            <h1>Welcome back, {user?.name || 'User'}! 👋</h1>
-            <p>Track your progress and continue improving your interview skills</p>
-          </div>
-          <div className="dashboard-actions">
-            <Link to="/interview" className="btn btn-primary">
-              📝 Start Interview
-            </Link>
-            <Link to="/practice" className="btn btn-secondary">
-              Practice Mode
-            </Link>
+            {loading ? (
+              <div className="skeleton" style={{width: '200px', height: '16px', marginBottom: '8px'}}></div>
+            ) : (
+              <p className="dashboard-greeting">Welcome back, {user?.name || 'User'}</p>
+            )}
+            <h1 className="dashboard-title">Dashboard</h1>
           </div>
         </div>
 
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <div className="stat-icon">📊</div>
-            <div className="stat-content">
-              <h3>Total Interviews</h3>
-              <p className="stat-value">{stats.totalInterviews}</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-content">
-              <h3>Average Score</h3>
-              <p className="stat-value">{stats.averageScore}</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-content">
-              <h3>Best Score</h3>
-              <p className="stat-value">{stats.bestScore}</p>
-            </div>
-          </div>
-        </div>
+        {error && <div className="alert alert-error">{error}</div>}
 
-        <div className="dashboard-content">
-          <div className="section-header">
-            <h2>Recent Interviews</h2>
-          </div>
-
-          {/* Filters Section */}
-          <div className="filters-section">
-            <div className="filter-group">
-              <label>Type:</label>
-              <select 
-                value={filterType} 
-                onChange={(e) => setFilterType(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Types</option>
-                <option value="resume">Resume-Based</option>
-                <option value="practice">Practice</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Score:</label>
-              <select 
-                value={filterScore} 
-                onChange={(e) => setFilterScore(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Scores</option>
-                <option value="excellent">Excellent (80+)</option>
-                <option value="good">Good (60-79)</option>
-                <option value="needs-improvement">Needs Improvement (&lt;60)</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Sort By:</label>
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value)}
-                className="filter-select"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="highest-score">Highest Score</option>
-                <option value="lowest-score">Lowest Score</option>
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="spinner"></div>
-          ) : filteredInterviews.length > 0 ? (
-            <div className="interviews-list">
-              {filteredInterviews.map((interview) => (
-                <div key={interview.id} className="interview-card">
-                  <div className="interview-info">
-                    <h3>{interview.type}</h3>
-                    <p className="interview-date">{new Date(interview.date).toLocaleDateString()}</p>
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          {['Total Interviews', 'Avg. Score', 'Best Score'].map((label, idx) => (
+            <div className="stat-card" key={idx}>
+              <div className="stat-card-icon">{idx === 0 ? '📊' : idx === 1 ? '⭐' : '🏆'}</div>
+              <div>
+                {loading ? (
+                   <div className="skeleton" style={{width: '60px', height: '32px', marginBottom: '6px'}}></div>
+                ) : (
+                  <div className="stat-card-value">
+                    {idx === 0 ? stats.totalInterviews : 
+                     idx === 1 ? stats.averageScore : 
+                     stats.bestScore}
                   </div>
-                  <div className="interview-score">
-                    <div className="score-circle" style={{
-                      background: `conic-gradient(var(--primary) ${interview.score * 3.6}deg, var(--border) 0deg)`
-                    }}>
-                      <div className="score-inner">
-                        {interview.score}
-                      </div>
+                )}
+                <div className="stat-card-label">{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Body Layout */}
+        <div className="dashboard-body">
+          {/* History */}
+          <div className="history-section">
+            <div className="history-header">
+              <span className="history-title">Recent History</span>
+              <div className="filters-container">
+                <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="resume">Resume</option>
+                </select>
+                <select className="filter-select" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">Last Week</option>
+                  <option value="month">Last Month</option>
+                </select>
+                <select className="filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                  <option value="newest">Newest</option>
+                  <option value="highest-score">Best Score</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="history-list">
+              {loading ? (
+                // Skeletons
+                Array(3).fill(0).map((_, i) => (
+                  <div className="history-item" key={i}>
+                    <div className="skeleton history-item-icon"></div>
+                    <div className="history-item-info">
+                      <div className="skeleton" style={{width: '120px', height: '14px', marginBottom: '6px'}}></div>
+                      <div className="skeleton" style={{width: '80px', height: '10px'}}></div>
                     </div>
                   </div>
-                  <button 
-                    className="btn btn-secondary btn-small"
-                    onClick={() => window.location.href = `/results/${interview.id}`}
-                  >
-                    View Details
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-icon">📝</div>
-              <h3>{interviews.length === 0 ? 'No interviews yet' : 'No interviews match your filters'}</h3>
-              <p>{interviews.length === 0 ? 'Start your first interview to see your progress here' : 'Try adjusting your filters to see more results'}</p>
-              {interviews.length === 0 && (
-                <Link to="/interview" className="btn btn-primary">
-                  Start Interview
-                </Link>
+                ))
+              ) : filteredInterviews.length > 0 ? (
+                filteredInterviews.map((interview) => (
+                  <Link to={`/results/${interview.id}`} className="history-item" key={interview.id}>
+                    <div className="history-item-icon">
+                      {interview.type.toLowerCase().includes('resume') ? '📄' : '🎯'}
+                    </div>
+                    <div className="history-item-info">
+                      <div className="history-item-title">{interview.type}</div>
+                      <div className="history-item-meta">{new Date(interview.date).toLocaleDateString()}</div>
+                    </div>
+                    <div className={`history-item-score ${getScoreClass(interview.score)}`}>
+                      {interview.score}
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                 <div style={{padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted)'}}>
+                   <p style={{fontSize: '24px', marginBottom: '8px'}}>📝</p>
+                   <p style={{fontSize: '14px'}}>No interviews found. Pick a practice mode to start.</p>
+                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
+
       </div>
     </div>
   );

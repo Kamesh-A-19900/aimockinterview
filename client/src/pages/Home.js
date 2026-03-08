@@ -1,11 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Home.css';
+import logoImage from '../assets/logo.png';
 
 function Home() {
   const navigate = useNavigate();
-  
-  // Check if user is logged in
   const isLoggedIn = !!localStorage.getItem('token');
   
   const handleStartTrial = (e) => {
@@ -16,117 +15,107 @@ function Home() {
       navigate('/signup');
     }
   };
-  
+
   return (
-    <div className="home">
+    <div className="home-page">
       {/* Hero Section */}
-      <section className="hero gradient-bg">
-        <div className="container">
-          <div className="hero-content">
-            <h1 className="hero-title">
-              Ace Your Next Interview with
-              <span className="hero-highlight"> AI-Powered Practice</span>
-            </h1>
-            <p className="hero-subtitle">
-              Get personalized mock interviews, real-time feedback, and comprehensive assessments 
-              to boost your confidence and land your dream job.
-            </p>
-            <div className="hero-buttons">
-              <button onClick={handleStartTrial} className="btn btn-large btn-white">
-                {isLoggedIn ? 'Go to Dashboard' : 'Start Free Trial'}
-              </button>
-              <Link to="/practice" className="btn btn-large btn-outline">
-                Try Practice Mode
-              </Link>
-            </div>
+      <section className="hero">
+        <div className="hero-glow-1"></div>
+        <div className="hero-content">
+          <div className="hero-logo">
+            <img 
+              src={logoImage} 
+              alt="MockInterviewAI" 
+              className="logo-image"
+              onError={(e) => {
+                console.error('Logo failed to load:', e);
+                e.target.style.display = 'none';
+              }}
+              onLoad={() => console.log('Logo loaded successfully')}
+            />
+          </div>
+          <span className="hero-badge">
+            <span className="hero-badge-dot" />
+            AI-Powered Interview Training
+          </span>
+          <h1 className="hero-headline">
+            Ace your next interview<br />
+            with <span className="hero-headline-highlight">real AI pressure</span>
+          </h1>
+          <p className="hero-subtext">
+            Practice with an AI that actually challenges you — personalized questions from your resume, deep technical probing, and honest scoring.
+          </p>
+          <div className="hero-actions">
+            <button onClick={handleStartTrial} className="btn-primary">
+              {isLoggedIn ? 'Go to Dashboard' : 'Start Free Trial'}
+            </button>
+            <Link to="/practice" className="btn-secondary">
+              Try Practice Mode
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features">
-        <div className="container">
-          <h2 className="section-title">Why Choose MockInterviewAI?</h2>
-          <div className="features-grid">
-            <div className="feature-card slide-in">
-              <div className="feature-icon">📄</div>
-              <h3>Resume-Based Questions</h3>
-              <p>Upload your resume and get personalized questions tailored to your experience and skills.</p>
-            </div>
-            <div className="feature-card slide-in" style={{animationDelay: '0.1s'}}>
-              <div className="feature-icon">🤖</div>
-              <h3>AI-Powered Feedback</h3>
-              <p>Get instant, detailed feedback on communication, technical accuracy, and confidence.</p>
-            </div>
-            <div className="feature-card slide-in" style={{animationDelay: '0.2s'}}>
-              <div className="feature-icon">🎯</div>
-              <h3>Role-Specific Practice</h3>
-              <p>Practice for specific roles like Software Engineer, Data Scientist, Product Manager, and more.</p>
-            </div>
-            <div className="feature-card slide-in" style={{animationDelay: '0.3s'}}>
-              <div className="feature-icon">📊</div>
-              <h3>Performance Analytics</h3>
-              <p>Track your progress over time with detailed performance metrics and improvement suggestions.</p>
-            </div>
-            <div className="feature-card slide-in" style={{animationDelay: '0.4s'}}>
-              <div className="feature-icon">💬</div>
-              <h3>Natural Conversations</h3>
-              <p>Experience realistic interview conversations with adaptive follow-up questions.</p>
-            </div>
-            <div className="feature-card slide-in" style={{animationDelay: '0.5s'}}>
-              <div className="feature-icon">⚡</div>
-              <h3>Instant Results</h3>
-              <p>Get comprehensive assessment reports immediately after completing your interview.</p>
-            </div>
+      <section className="features-section">
+        <div className="section-label">Features</div>
+        <h2 className="section-title">Everything you need to succeed</h2>
+        <p className="section-subtitle">Comprehensive tools that adapt to your specific interview needs and provide meaningful feedback.</p>
+        
+        <div className="features-grid">
+          <div className="feature-cell">
+            <div className="feature-icon-wrap">📄</div>
+            <h3 className="feature-title">Resume-Based Questions</h3>
+            <p className="feature-desc">Upload your resume and get personalized questions tailored to your experience and skills.</p>
+          </div>
+          <div className="feature-cell">
+            <div className="feature-icon-wrap">🤖</div>
+            <h3 className="feature-title">AI-Powered Feedback</h3>
+            <p className="feature-desc">Get instant, detailed feedback on communication, technical accuracy, and confidence.</p>
+          </div>
+          <div className="feature-cell">
+            <div className="feature-icon-wrap">🎯</div>
+            <h3 className="feature-title">Role-Specific Practice</h3>
+            <p className="feature-desc">Practice for specific roles like Software Engineer, Data Scientist, Product Manager, and more.</p>
+          </div>
+          <div className="feature-cell">
+            <div className="feature-icon-wrap">💬</div>
+            <h3 className="feature-title">Natural Conversations</h3>
+            <p className="feature-desc">Experience realistic interview conversations with adaptive follow-up questions.</p>
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="how-it-works">
-        <div className="container">
-          <h2 className="section-title">How It Works</h2>
-          <div className="steps">
-            <div className="step">
-              <div className="step-number">1</div>
-              <h3>Upload Your Resume</h3>
-              <p>Upload your resume in PDF format and our AI will analyze your background.</p>
-            </div>
-            <div className="step-arrow">→</div>
-            <div className="step">
-              <div className="step-number">2</div>
-              <h3>Start Interview</h3>
-              <p>Choose between resume-based or role-specific practice interviews.</p>
-            </div>
-            <div className="step-arrow">→</div>
-            <div className="step">
-              <div className="step-number">3</div>
-              <h3>Get Feedback</h3>
-              <p>Receive detailed feedback on your performance across multiple dimensions.</p>
-            </div>
+      <section className="how-section">
+        <div className="section-label">How It Works</div>
+        <h2 className="section-title">From practice to hired</h2>
+        <div className="steps-row">
+          <div className="step-item">
+            <div className="step-number">1</div>
+            <h3 className="step-title">Upload Profile</h3>
+            <p className="step-desc">Provide your resume to get context-specific questions.</p>
+          </div>
+          <div className="step-item">
+            <div className="step-number">2</div>
+            <h3 className="step-title">Start Practice</h3>
+            <p className="step-desc">Experience adaptive AI in a text-based interview simulation.</p>
+          </div>
+          <div className="step-item">
+            <div className="step-number">3</div>
+            <h3 className="step-title">Review Feedback</h3>
+            <p className="step-desc">Get deep insights and suggested improvements for next time.</p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta gradient-bg">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Ace Your Interview?</h2>
-            <p>Join thousands of job seekers who have improved their interview skills with MockInterviewAI.</p>
-            <button onClick={handleStartTrial} className="btn btn-large btn-white">
-              {isLoggedIn ? 'Go to Dashboard' : 'Get Started Now'}
-            </button>
-          </div>
-        </div>
+      {/* CTA Banner */}
+      <section className="cta-banner">
+        <h2 className="section-title" style={{margin: '0 0 24px'}}>Ready to Ace Your Interview?</h2>
+        <button onClick={handleStartTrial} className="btn-primary">
+          {isLoggedIn ? 'Go to Dashboard' : 'Get Started Now'}
+        </button>
       </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <p>&copy; 2024 MockInterviewAI. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }

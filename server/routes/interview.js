@@ -15,6 +15,12 @@ router.post('/:id/complete', authenticateToken, interviewController.completeInte
 // Terminate interview (delete due to policy violation)
 router.delete('/:id/terminate', authenticateToken, interviewController.terminateInterview);
 
+// Get rate limiting status
+router.get('/rate-limit-status', authenticateToken, interviewController.getRateLimitStatus);
+
+// Get question bank status
+router.get('/question-bank-status', authenticateToken, interviewController.getQuestionBankStatus);
+
 // Get interview details
 router.get('/:id', authenticateToken, interviewController.getInterview);
 

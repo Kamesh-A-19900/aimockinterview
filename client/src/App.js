@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import './styles/globals.css'; // Import professional dark theme
 
 // Pages
 import Home from './pages/Home';
@@ -18,17 +19,15 @@ import Settings from './pages/Settings';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
-  // Load theme on app mount
-  React.useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+
 
   return (
     <Router>
-      <div className="App">
+      <ErrorBoundary>
+        <div className="App">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -93,7 +92,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <Footer />
-      </div>
+        </div>
+      </ErrorBoundary>
     </Router>
   );
 }

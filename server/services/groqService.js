@@ -1,4 +1,5 @@
 const Groq = require('groq-sdk');
+const { getRateLimitService } = require('./rateLimitService');
 
 class GroqService {
   constructor() {
@@ -7,14 +8,42 @@ class GroqService {
     });
     
     this.model = 'llama-3.1-8b-instant'; // Fast and smart
+    this.rateLimiter = getRateLimitService();
+  }
+
+  /**
+   * Make rate-limited API call
+   * @param {Object} params - API call parameters
+   * @param {string} userId - User ID for rate limiting
+   * @returns {Promise} API response
+   */
+  async makeRateLimitedCall(params, userId = 'system') {
+    const estimatedTokens = this.estimateTokens(params);
+    
+    return this.rateLimiter.queueRequest(async () => {
+      return await this.client.chat.completions.create(params);
+    }, userId, estimatedTokens);
+  }
+  
+  /**
+   * Estimate token usage for rate limiting
+   * @param {Object} params - API parameters
+   * @returns {number} Estimated tokens
+   */
+  estimateTokens(params) {
+    const content = params.messages?.map(m => m.content).join(' ') || '';
+    const inputTokens = Math.ceil(content.length / 4); // Rough estimate: 4 chars per token
+    const outputTokens = params.max_tokens || 500;
+    return inputTokens + outputTokens;
   }
 
   /**
    * Extract structured resume data using Groq LLM
    * @param {string} resumeText - Raw text from PDF
+   * @param {string} userId - User ID for rate limiting
    * @returns {Promise<Object>} Structured resume data
    */
-  async extractResumeData(resumeText) {
+  async extractResumeData(resumeText, userId = 'system') {
     const prompt = `You are a resume parser. Extract the following information from the resume text below and return it as a JSON object.
 
 Required fields:
@@ -41,7 +70,7 @@ Return ONLY valid JSON, no additional text or markdown formatting.`;
     try {
       const startTime = Date.now();
       
-      const response = await this.client.chat.completions.create({
+      const response = await this.makeRateLimitedCall({
         model: this.model,
         messages: [
           {
@@ -51,7 +80,7 @@ Return ONLY valid JSON, no additional text or markdown formatting.`;
         ],
         temperature: 0.1,
         max_tokens: 2000
-      });
+      }, userId);
       
       const duration = Date.now() - startTime;
       console.log(`✅ Groq LLM extraction completed in ${duration}ms`);

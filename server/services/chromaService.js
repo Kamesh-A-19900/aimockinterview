@@ -90,6 +90,103 @@ class ChromaService {
       patterns: new SimpleVectorStore()
     };
     this.initialized = false;
+    // Add client property for compatibility
+    this.client = this;
+  }
+
+  /**
+   * Create or get a collection
+   * @param {string} collectionName - Name of the collection
+   */
+  async createCollection(collectionName) {
+    try {
+      if (!this.collections[collectionName]) {
+        this.collections[collectionName] = new SimpleVectorStore();
+        console.log(`✅ Created collection: ${collectionName}`);
+      }
+      return this.collections[collectionName];
+    } catch (error) {
+      console.error(`❌ Failed to create collection ${collectionName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add documents to a collection
+   * @param {string} collectionName - Name of the collection
+   * @param {Object} batch - Batch of documents {documents, metadatas, ids}
+   */
+  async addDocuments(collectionName, batch) {
+    try {
+      if (!this.collections[collectionName]) {
+        await this.createCollection(collectionName);
+      }
+      
+      await this.collections[collectionName].add(batch);
+    } catch (error) {
+      console.error(`❌ Failed to add documents to ${collectionName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Query documents from a collection
+   * @param {string} collectionName - Name of the collection
+   * @param {string} query - Query text
+   * @param {number} nResults - Number of results to return
+   * @returns {Object} Query results
+   */
+  async queryDocuments(collectionName, query, nResults = 5) {
+    try {
+      if (!this.collections[collectionName]) {
+        console.log(`⚠️  Collection ${collectionName} does not exist`);
+        return { documents: [], metadatas: [], distances: [] };
+      }
+      
+      const results = await this.collections[collectionName].query({
+        queryTexts: [query],
+        nResults
+      });
+
+      return {
+        documents: results.documents[0] || [],
+        metadatas: results.metadatas[0] || [],
+        distances: results.distances[0] || []
+      };
+    } catch (error) {
+      console.error(`❌ Failed to query collection ${collectionName}:`, error);
+      return { documents: [], metadatas: [], distances: [] };
+    }
+  }
+
+  /**
+   * List all collections
+   * @returns {Array} Array of collection objects
+   */
+  async listCollections() {
+    try {
+      return Object.keys(this.collections).map(name => ({ name }));
+    } catch (error) {
+      console.error('❌ Failed to list collections:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get collection count
+   * @param {string} collectionName - Name of the collection
+   * @returns {number} Number of documents in collection
+   */
+  async getCollectionCount(collectionName) {
+    try {
+      if (!this.collections[collectionName]) {
+        return 0;
+      }
+      return await this.collections[collectionName].count();
+    } catch (error) {
+      console.error(`❌ Failed to get count for ${collectionName}:`, error);
+      return 0;
+    }
   }
 
   /**

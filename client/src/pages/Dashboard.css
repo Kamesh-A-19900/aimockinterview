@@ -1,252 +1,200 @@
+/* Dashboard.css - Professional Dark Theme */
 .dashboard-page {
-  min-height: calc(100vh - 70px);
-  padding: 40px 0;
-  background: var(--bg-secondary);
+  min-height: 100vh;
+  background: var(--bg-base);
+  padding: 80px 24px 48px;
 }
 
+.dashboard-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Header row - Professional welcome message */
 .dashboard-header {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 40px;
   flex-wrap: wrap;
-  gap: 20px;
-}
-
-.dashboard-header h1 {
-  font-size: 36px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.dashboard-header p {
-  color: var(--text-secondary);
-  font-size: 18px;
-}
-
-.dashboard-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-
-.stat-card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-  font-size: 48px;
-}
-
-.stat-content h3 {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.dashboard-content {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.section-header {
-  margin-bottom: 24px;
-}
-
-.section-header h2 {
-  font-size: 24px;
-  color: var(--text-primary);
-}
-
-.interviews-list {
-  display: flex;
-  flex-direction: column;
   gap: 16px;
 }
 
-.interview-card {
+.dashboard-greeting {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+.dashboard-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border-hover); }
+/* Subtle brand accent line at top */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.stat-card:hover::before { opacity: 1; }
+.stat-card-icon {
+  font-size: 20px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+.stat-card-value {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.stat-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.stat-card-change {
+  font-size: 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Full width layout for history */
+.dashboard-body {
+  display: block;
+}
+
+/* Interview history list */
+.history-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.history-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  gap: 20px;
-  flex-wrap: wrap;
 }
-
-.interview-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-}
-
-.interview-info h3 {
-  font-size: 18px;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-}
-
-.interview-date {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.interview-score {
-  flex-shrink: 0;
-}
-
-.score-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.score-inner {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-state h3 {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-}
-
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .dashboard-header h1 {
-    font-size: 28px;
-  }
-
-  .dashboard-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .dashboard-actions .btn {
-    width: 100%;
-  }
-
-  .interview-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .interview-card .btn {
-    width: 100%;
-  }
-}
-
-/* Filters Section */
-.filters-section {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 32px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filter-group label {
-  font-size: 14px;
+.history-title {
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
 }
-
-.filter-input,
-.filter-select {
-  padding: 10px 14px;
-  border: 2px solid var(--input-border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  background: var(--input-bg);
-  color: var(--text-primary);
-}
-
-.filter-input:focus,
-.filter-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.filter-select {
+.history-item {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: var(--bg-elevated); }
+
+.history-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--brand-subtle);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.history-item-info { flex: 1; min-width: 0; }
+.history-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-item-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.history-item-score {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
-  .filters-section {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+/* Score colors */
+.score-excellent { color: var(--accent-green); }
+.score-good { color: var(--accent-amber); }
+.score-low { color: var(--accent-red); }
+
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-overlay) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Filters */
+.filters-container {
+  display: flex;
+  gap: 12px;
+}
+.filter-select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+.filter-select:focus {
+  border-color: var(--brand);
 }

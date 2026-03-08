@@ -8,9 +8,6 @@ function Settings() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // Theme state
-  const [theme, setTheme] = useState('light');
-  
   // Password change state
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -18,21 +15,6 @@ function Settings() {
     newPassword: '',
     confirmPassword: ''
   });
-
-  useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    setSuccess(`Theme changed to ${newTheme} mode`);
-    setTimeout(() => setSuccess(''), 3000);
-  };
 
   const handlePasswordChange = (e) => {
     setPasswordData({
@@ -148,35 +130,6 @@ function Settings() {
         {success && <div className="alert alert-success">{success}</div>}
 
         <div className="settings-content">
-          {/* Appearance Settings */}
-          <div className="settings-section">
-            <h2>Appearance</h2>
-            <p className="section-description">Customize how the app looks on your device</p>
-            
-            <div className="setting-item">
-              <div className="setting-info">
-                <div className="setting-label">Theme</div>
-                <div className="setting-description">Choose your preferred color scheme</div>
-              </div>
-              <div className="theme-selector">
-                <button 
-                  className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-                  onClick={() => handleThemeChange('light')}
-                >
-                  <span className="theme-icon">☀️</span>
-                  Light
-                </button>
-                <button 
-                  className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-                  onClick={() => handleThemeChange('dark')}
-                >
-                  <span className="theme-icon">🌙</span>
-                  Dark
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* Security Settings */}
           <div className="settings-section">
             <h2>Security</h2>

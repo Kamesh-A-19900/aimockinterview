@@ -3,11 +3,10 @@ const { RouterAgent } = require('../agents/routerAgent');
 const { InterviewerAgent } = require('../agents/interviewerAgent');
 const { ResearcherAgent } = require('../agents/researcherAgent');
 const { EvaluatorAgent } = require('../agents/evaluatorAgent');
-const { ContextManager } = require('../services/contextManager');
-const { TopicTracker } = require('../services/topicTracker');
+const { getDialogueController } = require('../services/dialogueController');
 
 // Initialize agents (singleton pattern)
-let interviewerAgent, researcherAgent, evaluatorAgent, routerAgent;
+let interviewerAgent, researcherAgent, evaluatorAgent, routerAgent, dialogueController;
 
 function getAgents() {
   if (!interviewerAgent) {
@@ -15,13 +14,17 @@ function getAgents() {
     researcherAgent = new ResearcherAgent();
     evaluatorAgent = new EvaluatorAgent();
     routerAgent = new RouterAgent(interviewerAgent, researcherAgent, evaluatorAgent);
+    
+    // Initialize DialogueController and inject agents
+    dialogueController = getDialogueController();
+    dialogueController.setAgents(interviewerAgent, evaluatorAgent, routerAgent);
+    
+    console.log('✅ Interview system initialized with DialogueController');
   }
-  return { interviewerAgent, researcherAgent, evaluatorAgent, routerAgent };
+  return { interviewerAgent, researcherAgent, evaluatorAgent, routerAgent, dialogueController };
 }
 
-// Store context managers and topic trackers per session (in-memory)
-const contextManagers = new Map();
-const topicTrackers = new Map();
+// DialogueController manages all conversation state - no need for separate maps
 
 /**
  * Start a new interview session
@@ -55,8 +58,6 @@ exports.startInterview = async (req, res) => {
         await query('DELETE FROM qa_pairs WHERE session_id = $1', [session.id]);
         // Delete session
         await query('DELETE FROM interview_sessions WHERE id = $1', [session.id]);
-        // Clean up context manager if exists
-        contextManagers.delete(session.id);
       }
       
       console.log(`✅ Cleaned up abandoned interviews`);
@@ -87,42 +88,54 @@ exports.startInterview = async (req, res) => {
 
     const sessionId = sessionResult.rows[0].id;
 
-    // Initialize context manager for this session
-    const contextManager = new ContextManager(sessionId);
-    contextManagers.set(sessionId, contextManager);
+    // Initialize interview using DialogueController
+    const { dialogueController } = getAgents();
     
-    // Initialize topic tracker for this session
-    const topicTracker = new TopicTracker(sessionId, resumeData);
-    topicTrackers.set(sessionId, topicTracker);
-    console.log('✅ Topic Tracker initialized for session:', sessionId);
-
-    // Generate first question using Interviewer Agent
-    let firstQuestion;
     try {
-      const { interviewerAgent } = getAgents();
-      firstQuestion = await interviewerAgent.generateOpeningQuestion(resumeData);
-      console.log('✅ Multi-Agent: Generated opening question with Interviewer Agent (8B)');
-    } catch (error) {
-      console.error('❌ Interviewer Agent error:', error.message);
-      firstQuestion = `Tell me about your experience with ${resumeData.skills?.[0] || 'your main technical skill'}.`;
+      const interviewSession = await dialogueController.startInterview(userId, sessionId, resumeData);
+      
+      // Store first question in database
+      await query(
+        `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
+         VALUES ($1, $2, 1, NOW())`,
+        [sessionId, interviewSession.question]
+      );
+
+      console.log('✅ Interview started with DialogueController');
+
+      res.json({
+        success: true,
+        session: {
+          id: sessionId,
+          startedAt: sessionResult.rows[0].started_at,
+          question: interviewSession.question,
+          questionNumber: 1,
+          stage: interviewSession.stage
+        }
+      });
+    } catch (dialogueError) {
+      console.error('❌ DialogueController error:', dialogueError);
+      
+      // Fallback to simple question generation
+      const firstQuestion = `Tell me about your experience with ${resumeData.skills?.[0] || 'your main technical skill'}.`;
+      
+      await query(
+        `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
+         VALUES ($1, $2, 1, NOW())`,
+        [sessionId, firstQuestion]
+      );
+
+      res.json({
+        success: true,
+        session: {
+          id: sessionId,
+          startedAt: sessionResult.rows[0].started_at,
+          question: firstQuestion,
+          questionNumber: 1,
+          stage: 'INTRODUCTION'
+        }
+      });
     }
-
-    // Store first question
-    await query(
-      `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
-       VALUES ($1, $2, 1, NOW())`,
-      [sessionId, firstQuestion]
-    );
-
-    res.json({
-      success: true,
-      session: {
-        id: sessionId,
-        startedAt: sessionResult.rows[0].started_at,
-        question: firstQuestion,
-        questionNumber: 1
-      }
-    });
   } catch (error) {
     console.error('Start interview error:', error);
     res.status(500).json({
@@ -197,121 +210,100 @@ exports.submitAnswer = async (req, res) => {
       'UPDATE qa_pairs SET answer = $1 WHERE id = $2',
       [answer.trim(), currentQA.id]
     );
+
+    // Process answer using DialogueController
+    const { dialogueController } = getAgents();
     
-    // Get or create topic tracker for this session
-    let topicTracker = topicTrackers.get(sessionId);
-    if (!topicTracker) {
-      topicTracker = new TopicTracker(sessionId, session.extracted_data);
-      topicTrackers.set(sessionId, topicTracker);
-    }
-    
-    // Record Q&A in topic tracker
-    topicTracker.recordQA(currentQA.question, answer.trim());
-    
-    // Check if should move to new topic
-    const shouldTransition = topicTracker.shouldMoveToNewTopic(answer.trim());
-    let nextTopic = null;
-    
-    if (shouldTransition) {
-      nextTopic = topicTracker.getNextTopic();
-      if (nextTopic) {
-        topicTracker.setCurrentTopic(nextTopic);
-        console.log(`🔄 Transitioning to new topic: ${nextTopic.type} - ${nextTopic.name}`);
-      }
-    }
-    
-    // Log coverage stats
-    const coverage = topicTracker.getCoverageStats();
-    console.log(`📊 Coverage: ${coverage.overall.percentage}% (${coverage.overall.covered}/${coverage.overall.total} topics)`);
-    
-    // Log quality metrics
-    const metrics = topicTracker.getQualityMetrics();
-    console.log(`📈 Quality: Avg length ${metrics.avgAnswerLength}, Vague ${metrics.vagueAnswerRate}%, Detailed ${metrics.detailedAnswerRate}%`);
-
-    // Get all previous Q&A for context
-    const previousQAResult = await query(
-      `SELECT question, answer, question_order
-       FROM qa_pairs
-       WHERE session_id = $1 AND answer IS NOT NULL
-       ORDER BY question_order ASC`,
-      [sessionId]
-    );
-
-    const previousQA = previousQAResult.rows;
-
-    // Get or create context manager for this session
-    let contextManager = contextManagers.get(sessionId);
-    if (!contextManager) {
-      contextManager = new ContextManager(sessionId);
-      contextManagers.set(sessionId, contextManager);
-      
-      // Rebuild context from previous Q&A
-      for (const qa of previousQA) {
-        await contextManager.addMessage(qa.question, qa.answer);
-      }
-    } else {
-      // Add the latest Q&A to context
-      await contextManager.addMessage(currentQA.question, answer.trim());
-    }
-
-    // Get compressed context
-    const context = contextManager.getContext();
-    console.log(`📊 Context: ${context.tokenEstimate} tokens (compressed)`);
-
-    // Route to appropriate agent based on last answer
-    const { routerAgent, interviewerAgent } = getAgents();
-    const selectedAgent = routerAgent.route('generate_question', {
-      lastAnswer: answer.trim()
-    });
-
-    // Log routing decision
-    if (selectedAgent === interviewerAgent) {
-      console.log('💬 Router: Using Interviewer Agent (8B) - conversational');
-    } else {
-      console.log('🔬 Router: Using Researcher Agent (120B) - technical deep-dive');
-    }
-
-    // Generate next question using selected agent
-    let nextQuestion;
     try {
-      const trackerState = topicTracker.getState();
+      const result = await dialogueController.processAnswer(sessionId, answer.trim());
       
-      const result = await selectedAgent.generateQuestion({
-        lastAnswer: answer.trim(),
-        summary: context.summary,
-        resumeData: session.extracted_data,
-        questionCount: previousQA.length + 1,
-        topicContext: {
-          currentTopic: trackerState.currentTopic,
-          nextTopic: nextTopic,
-          coverage: trackerState.coverage,
-          shouldTransition: shouldTransition
-        }
+      const nextQuestionOrder = currentQA.question_order + 1;
+
+      // Store next question
+      await query(
+        `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
+         VALUES ($1, $2, $3, NOW())`,
+        [sessionId, result.question, nextQuestionOrder]
+      );
+
+      console.log('✅ Answer processed with DialogueController');
+
+      res.json({
+        success: true,
+        question: result.question,
+        questionNumber: nextQuestionOrder,
+        stage: result.stage,
+        isClarification: result.isClarification || false
       });
+    } catch (dialogueError) {
+      console.error('❌ DialogueController error:', dialogueError);
+      console.error('❌ Error stack:', dialogueError.stack);
+      console.error('❌ Session ID:', sessionId);
+      console.error('❌ Answer:', answer.trim());
       
-      // Handle both string and object responses
-      nextQuestion = typeof result === 'string' ? result : result.question;
-      console.log('✅ Multi-Agent: Generated next question');
-    } catch (error) {
-      console.error('❌ Agent error:', error.message);
-      // Fallback question
-      nextQuestion = 'Can you tell me more about that experience?';
+      // Generate a better fallback question based on the answer and resume data
+      let fallbackQuestion = 'Can you tell me more about that experience?';
+      
+      const lowerAnswer = answer.trim().toLowerCase();
+      
+      // If candidate is asking for clarification
+      if (lowerAnswer.includes('what') || lowerAnswer.includes('which') || lowerAnswer.includes('about what')) {
+        fallbackQuestion = "Let me be more specific - I'd like to hear about any projects you've worked on or technical experiences you've had.";
+      }
+      // If candidate mentioned specific projects
+      else if (lowerAnswer.includes('project') || lowerAnswer.includes('studyspark') || lowerAnswer.includes('netwise') || lowerAnswer.includes('weather')) {
+        fallbackQuestion = "That sounds interesting! Can you tell me more about one of those projects - perhaps StudySpark? What technologies did you use and what challenges did you face?";
+      }
+      // If candidate mentioned technologies
+      else if (lowerAnswer.includes('ml') || lowerAnswer.includes('ai') || lowerAnswer.includes('genai') || lowerAnswer.includes('automation')) {
+        fallbackQuestion = "I'd love to hear more about your AI and ML work. Can you walk me through a specific project where you applied these technologies?";
+      }
+      // If candidate mentioned education/college
+      else if (lowerAnswer.includes('student') || lowerAnswer.includes('college') || lowerAnswer.includes('engineering')) {
+        fallbackQuestion = "What kind of projects have you worked on during your studies? Any that you're particularly proud of?";
+      }
+      // If no keywords found in answer, fall back to resume data
+      else {
+        console.log('⚠️  No keywords found in answer, falling back to resume data');
+        
+        try {
+          // Get resume data for this session
+          const resumeData = session.extracted_data;
+          
+          if (resumeData && resumeData.skills && resumeData.skills.length > 0) {
+            const randomSkill = resumeData.skills[Math.floor(Math.random() * resumeData.skills.length)];
+            fallbackQuestion = `I see from your resume that you have experience with ${randomSkill}. Can you tell me about a specific project where you used this technology?`;
+          } else if (resumeData && resumeData.projects && resumeData.projects.length > 0) {
+            const randomProject = resumeData.projects[Math.floor(Math.random() * resumeData.projects.length)];
+            fallbackQuestion = `I noticed you mentioned ${randomProject.name || 'a project'} on your resume. Can you walk me through what you built and what technologies you used?`;
+          } else if (resumeData && resumeData.experience && resumeData.experience.length > 0) {
+            const recentExp = resumeData.experience[0];
+            fallbackQuestion = `Tell me about your experience at ${recentExp.company || 'your previous role'}. What kind of work did you do there?`;
+          } else {
+            fallbackQuestion = "Can you tell me about any technical projects you've worked on, either professionally or as personal projects?";
+          }
+        } catch (resumeError) {
+          console.error('❌ Error accessing resume data for fallback:', resumeError);
+          fallbackQuestion = "Can you tell me about any technical projects you've worked on, either professionally or as personal projects?";
+        }
+      }
+      
+      const nextQuestionOrder = currentQA.question_order + 1;
+
+      await query(
+        `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
+         VALUES ($1, $2, $3, NOW())`,
+        [sessionId, fallbackQuestion, nextQuestionOrder]
+      );
+
+      res.json({
+        success: true,
+        question: fallbackQuestion,
+        questionNumber: nextQuestionOrder,
+        stage: 'UNKNOWN',
+        isClarification: false
+      });
     }
-
-    const nextQuestionOrder = currentQA.question_order + 1;
-
-    // Store next question
-    await query(
-      `INSERT INTO qa_pairs (session_id, question, question_order, created_at)
-       VALUES ($1, $2, $3, NOW())`,
-      [sessionId, nextQuestion, nextQuestionOrder]
-    );
-
-    res.json({
-      success: true,
-      question: nextQuestion,
-      questionNumber: nextQuestionOrder
-    });
   } catch (error) {
     console.error('Submit answer error:', error);
     res.status(500).json({
@@ -367,20 +359,17 @@ exports.completeInterview = async (req, res) => {
       });
     }
 
-    // Generate assessment using Evaluator Agent
+    // Complete interview using DialogueController
+    const { dialogueController } = getAgents();
+    
     let assessment;
     try {
-      const { evaluatorAgent } = getAgents();
-      console.log('🎯 Multi-Agent: Using Evaluator Agent (70B) for assessment');
-      assessment = await evaluatorAgent.evaluate(qaPairs, userId); // Pass userId for privacy
-      console.log('✅ Multi-Agent: Assessment complete');
-      console.log('   Overall Score:', assessment.overall_score);
-      console.log('   Integrity Status:', assessment.integrityAnalysis?.status || 'N/A');
-    } catch (error) {
-      console.error('❌ Evaluator Agent error:', error.message);
-      console.error('   Stack:', error.stack);
+      assessment = await dialogueController.completeInterview(sessionId, qaPairs);
+      console.log('✅ Assessment generated with DialogueController');
+    } catch (dialogueError) {
+      console.error('❌ DialogueController assessment error:', dialogueError);
       
-      // Fallback assessment - ensure it always has all required fields
+      // Fallback assessment
       const avgAnswerLength = qaPairs.reduce((sum, qa) => sum + (qa.answer?.length || 0), 0) / qaPairs.length;
       const baseScore = Math.min(Math.floor(avgAnswerLength / 10) + 50, 85);
       
@@ -429,53 +418,93 @@ exports.completeInterview = async (req, res) => {
     assessment.evidence = assessment.evidence || {};
     assessment.integrityAnalysis = assessment.integrityAnalysis || {};
 
-    // Clean up context manager for this session
-    contextManagers.delete(sessionId);
-    topicTrackers.delete(sessionId);
-
-    // Store assessment - wrap in try-catch to handle any DB errors
-    // CRITICAL: Only mark session as completed if assessment saves successfully
+    // Store assessment - use UPSERT to handle duplicate session_id
     try {
       console.log('💾 Attempting to save assessment to database...');
       console.log('   Session ID:', sessionId);
       console.log('   Overall Score:', Math.round(assessment.overall_score));
       
-      const assessmentResult = await query(
-        `INSERT INTO assessments (
-          session_id, 
-          communication_score, 
-          correctness_score, 
-          confidence_score, 
-          stress_handling_score, 
-          overall_score,
-          feedback_text,
-          strengths,
-          weaknesses,
-          recommendations,
-          evidence,
-          integrity_analysis,
-          generated_at,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
-        RETURNING id`,
-        [
-          sessionId,
-          Math.round(assessment.communication_score), // Round to integer
-          Math.round(assessment.correctness_score),
-          Math.round(assessment.confidence_score),
-          Math.round(assessment.stress_handling_score),
-          Math.round(assessment.overall_score),
-          assessment.feedback_text,
-          JSON.stringify(assessment.strengths),
-          JSON.stringify(assessment.weaknesses),
-          JSON.stringify(assessment.recommendations),
-          JSON.stringify(assessment.evidence),
-          JSON.stringify(assessment.integrityAnalysis)
-        ]
+      // Check if assessment already exists for this session
+      const existingAssessment = await query(
+        'SELECT id FROM assessments WHERE session_id = $1',
+        [sessionId]
       );
       
+      let assessmentResult;
+      
+      if (existingAssessment.rows.length > 0) {
+        // Update existing assessment
+        console.log('⚠️  Assessment already exists for session, updating...');
+        assessmentResult = await query(
+          `UPDATE assessments SET
+            communication_score = $2,
+            correctness_score = $3,
+            confidence_score = $4,
+            stress_handling_score = $5,
+            overall_score = $6,
+            feedback_text = $7,
+            strengths = $8,
+            weaknesses = $9,
+            recommendations = $10,
+            evidence = $11,
+            integrity_analysis = $12,
+            generated_at = NOW()
+          WHERE session_id = $1
+          RETURNING id`,
+          [
+            sessionId,
+            Math.round(assessment.communication_score),
+            Math.round(assessment.correctness_score),
+            Math.round(assessment.confidence_score),
+            Math.round(assessment.stress_handling_score),
+            Math.round(assessment.overall_score),
+            assessment.feedback_text,
+            JSON.stringify(assessment.strengths),
+            JSON.stringify(assessment.weaknesses),
+            JSON.stringify(assessment.recommendations),
+            JSON.stringify(assessment.evidence),
+            JSON.stringify(assessment.integrityAnalysis)
+          ]
+        );
+      } else {
+        // Insert new assessment
+        assessmentResult = await query(
+          `INSERT INTO assessments (
+            session_id, 
+            communication_score, 
+            correctness_score, 
+            confidence_score, 
+            stress_handling_score, 
+            overall_score,
+            feedback_text,
+            strengths,
+            weaknesses,
+            recommendations,
+            evidence,
+            integrity_analysis,
+            generated_at,
+            created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+          RETURNING id`,
+          [
+            sessionId,
+            Math.round(assessment.communication_score),
+            Math.round(assessment.correctness_score),
+            Math.round(assessment.confidence_score),
+            Math.round(assessment.stress_handling_score),
+            Math.round(assessment.overall_score),
+            assessment.feedback_text,
+            JSON.stringify(assessment.strengths),
+            JSON.stringify(assessment.weaknesses),
+            JSON.stringify(assessment.recommendations),
+            JSON.stringify(assessment.evidence),
+            JSON.stringify(assessment.integrityAnalysis)
+          ]
+        );
+      }
+      
       if (!assessmentResult.rows || assessmentResult.rows.length === 0) {
-        throw new Error('Assessment insert returned no rows');
+        throw new Error('Assessment upsert returned no rows');
       }
       
       console.log('✅ Assessment saved to database with ID:', assessmentResult.rows[0].id);
@@ -489,12 +518,6 @@ exports.completeInterview = async (req, res) => {
       console.log('✅ Interview session marked as completed');
     } catch (dbError) {
       console.error('❌ Failed to save assessment to database:', dbError);
-      console.error('   Error code:', dbError.code);
-      console.error('   Error detail:', dbError.detail);
-      console.error('   Error message:', dbError.message);
-      
-      // Don't update session status - leave it as 'in_progress'
-      // This way the user can retry or we can debug
       throw new Error('Failed to save assessment: ' + dbError.message);
     }
 
@@ -516,11 +539,6 @@ exports.completeInterview = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Complete interview error:', error);
-    console.error('   Error details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
     
     res.status(500).json({
       success: false,
@@ -603,6 +621,57 @@ exports.getInterview = async (req, res) => {
 };
 
 /**
+ * Get rate limiting status
+ */
+exports.getRateLimitStatus = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { getRateLimitService } = require('../services/rateLimitService');
+    const rateLimiter = getRateLimitService();
+    
+    const globalStatus = rateLimiter.getStatus();
+    const userStatus = rateLimiter.getUserStatus(userId);
+    
+    res.json({
+      success: true,
+      rateLimits: {
+        global: globalStatus,
+        user: userStatus
+      }
+    });
+  } catch (error) {
+    console.error('Rate limit status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get rate limit status'
+    });
+  }
+};
+
+/**
+ * Get question bank status and statistics
+ */
+exports.getQuestionBankStatus = async (req, res) => {
+  try {
+    const { getPDFQuestionBankService } = require('../services/pdfQuestionBankService');
+    const questionBankService = getPDFQuestionBankService();
+    
+    const stats = questionBankService.getStatistics();
+    
+    res.json({
+      success: true,
+      questionBank: stats
+    });
+  } catch (error) {
+    console.error('Question bank status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get question bank status'
+    });
+  }
+};
+
+/**
  * Terminate interview due to tab switching or fullscreen exit (delete from database)
  * Also automatically deletes interviews with 0 answered questions
  */
@@ -648,9 +717,15 @@ exports.terminateInterview = async (req, res) => {
     // Delete the interview session
     await query('DELETE FROM interview_sessions WHERE id = $1', [sessionId]);
 
-    // Clean up context manager if exists
-    contextManagers.delete(sessionId);
-    topicTrackers.delete(sessionId);
+    // Clean up DialogueController state if exists
+    try {
+      const { dialogueController } = getAgents();
+      // The DialogueController uses ShortTermMemory which should handle cleanup automatically
+      // But we can explicitly clear the session if needed
+      console.log(`🧹 DialogueController state cleanup for session ${sessionId}`);
+    } catch (cleanupError) {
+      console.warn('⚠️  DialogueController cleanup warning:', cleanupError.message);
+    }
 
     console.log(`✅ Interview ${sessionId} deleted successfully`);
 

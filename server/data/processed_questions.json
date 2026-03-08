@@ -1,0 +1,312 @@
+{
+  "processedAt": "2026-03-08T05:24:27.206Z",
+  "scenarioCount": 16,
+  "scenarios": [
+    {
+      "id": "scenario_5",
+      "title": "Node.js uses an event-driven, non-blocking I/O mod...",
+      "content": "Node.js uses an event-driven, non-blocking I/O model. The event loop continuously checks the call stack and \ncallback queue. When asynchronous operations complete, their callbacks are placed in the queue and executed \nwhen the stack becomes empty. This allows Node.js to handle many concurrent requests efficiently with a \nsingle thread. \n \nPanel Member 2: Suppose multiple clients request files simultaneously. How does Node.js handle this?",
+      "qaPairs": [
+        {
+          "question": "uests efficiently with",
+          "answer": "single thread.",
+          "context": "e queue and executed \nwhen the stack becomes empty. This allows Node.js to handle many concurrent requests efficiently with a \nsingle thread. \n \nPanel Member 2: Suppose multiple clients request files"
+        },
+        {
+          "question": "uest files simult",
+          "answer": "neously. How does Node.js handle this?",
+          "context": "oncurrent requests efficiently with a \nsingle thread. \n \nPanel Member 2: Suppose multiple clients request files simultaneously. How does Node.js handle this?"
+        }
+      ],
+      "topics": [
+        "node"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_7",
+      "title": "I used the querystring module to parse URL-encoded...",
+      "content": "I used the querystring module to parse URL-encoded form data. After collecting the request body from the \nincoming data stream, it was converted into a key-value object for processing. \n \nPanel Member 3: What is the difference between synchronous and asynchronous file operations in Node.js?",
+      "qaPairs": [
+        {
+          "question": "uerystring module to p",
+          "answer": "rse URL-encoded form data. After collecting the re",
+          "context": "I used the querystring module to parse URL-encoded form data. After collecting the request body from the \nincom"
+        }
+      ],
+      "topics": [
+        "node"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_11",
+      "title": "I would optimize image compression, reduce frame s...",
+      "content": "I would optimize image compression, reduce frame size if necessary, and implement efficient buffering. \nAdditionally, using WebSockets instead of repeated HTTP requests could reduce overhead for continuous \nstreaming. \n \nPanel Member 2: Let's move to data structures. What is the time complexity of searching in a binary search \ntree?",
+      "qaPairs": [
+        {
+          "question": "uests could reduce overhe",
+          "answer": "d for continuous",
+          "context": "sary, and implement efficient buffering. \nAdditionally, using WebSockets instead of repeated HTTP requests could reduce overhead for continuous \nstreaming. \n \nPanel Member 2: Let's move to data struct"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_15",
+      "title": "Threads require less overhead for creation and con...",
+      "content": "Threads require less overhead for creation and context switching because they share the process resources such \nas memory and file descriptors. \n \nPanel Member 1: Final question. What is something you are currently trying to improve technically?",
+      "qaPairs": [
+        {
+          "question": "uire less overhe",
+          "answer": "d for creation and context switching because they share the process resources such",
+          "context": "Threads require less overhead for creation and context switching because they share the process resources such"
+        },
+        {
+          "question": "uestion. Wh",
+          "answer": "t is something you are currently trying to improve technically?",
+          "context": "use they share the process resources such \nas memory and file descriptors. \n \nPanel Member 1: Final question. What is something you are currently trying to improve technically?"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "technical"
+    },
+    {
+      "id": "scenario_20",
+      "title": "Once res.end() is called, no further data should be written to the response.",
+      "content": "res.write() sends chunks of data to the response stream, while res.end() signals that the response has finished. \nOnce res.end() is called, no further data should be written to the response. \n \nPanel Member 2: If a server must handle thousands of requests per second, what design considerations would \nyou apply?",
+      "qaPairs": [
+        {
+          "question": "uests per second, wh",
+          "answer": "t design considerations would",
+          "context": "r data should be written to the response. \n \nPanel Member 2: If a server must handle thousands of requests per second, what design considerations would \nyou apply?"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_26",
+      "title": "Deadlocks can be prevented by eliminating one of t...",
+      "content": "Deadlocks can be prevented by eliminating one of the four conditions. For example, using resource ordering \ncan remove the possibility of circular wait. \n \nPanel Member 3: Final question. How do you approach learning a new technology?",
+      "qaPairs": [
+        {
+          "question": "uestion. How do you",
+          "answer": "pproach learning a new technology?",
+          "context": "ple, using resource ordering \ncan remove the possibility of circular wait. \n \nPanel Member 3: Final question. How do you approach learning a new technology?"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_36",
+      "title": "Indexing is a technique used to improve the speed ...",
+      "content": "Indexing is a technique used to improve the speed of data retrieval in a database by creating a data structure \nthat allows faster lookup of records without scanning the entire table. \n \nPanel Member 2: What is the trade-off of using indexes?",
+      "qaPairs": [
+        {
+          "question": "ue used to improve the speed of d",
+          "answer": "ta retrieval in a database by creating a data structure",
+          "context": "Indexing is a technique used to improve the speed of data retrieval in a database by creating a data structure \nthat all"
+        }
+      ],
+      "topics": [
+        "database"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_38",
+      "title": "I would consider stateless architecture, horizonta...",
+      "content": "I would consider stateless architecture, horizontal scaling, efficient database queries, caching mechanisms, load \nbalancing, and asynchronous processing where possible. \n \nPanel Member 3: Final question. How do you ensure code quality in a team environment?",
+      "qaPairs": [
+        {
+          "question": "uestion. How do you ensure code qu",
+          "answer": "lity in a team environment?",
+          "context": "g mechanisms, load \nbalancing, and asynchronous processing where possible. \n \nPanel Member 3: Final question. How do you ensure code quality in a team environment?"
+        }
+      ],
+      "topics": [
+        "database"
+      ],
+      "difficulty": "advanced",
+      "type": "behavioral"
+    },
+    {
+      "id": "scenario_47",
+      "title": "An array stores elements in contiguous memory loca...",
+      "content": "An array stores elements in contiguous memory locations, allowing constant-time access using indices. A \nlinked list stores elements as nodes connected by pointers. Linked lists provide efficient insertion and deletion \nbut require sequential traversal to access elements. \n \nPanel Member 1: When would you prefer a linked list over an array?",
+      "qaPairs": [
+        {
+          "question": "uire sequenti",
+          "answer": "l traversal to access elements.",
+          "context": "ements as nodes connected by pointers. Linked lists provide efficient insertion and deletion \nbut require sequential traversal to access elements. \n \nPanel Member 1: When would you prefer a linked lis"
+        }
+      ],
+      "topics": [
+        "node"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_48",
+      "title": "When frequent insertions or deletions are required...",
+      "content": "When frequent insertions or deletions are required, especially in the middle of the data structure, a linked list is \npreferable because it does not require shifting elements as arrays do. \n \nPanel Member 2: What is the time complexity of inserting an element at the beginning of a linked list?",
+      "qaPairs": [
+        {
+          "question": "uired, especi",
+          "answer": "lly in the middle of the data structure, a linked list is",
+          "context": "When frequent insertions or deletions are required, especially in the middle of the data structure, a linked list is \npreferable because it does"
+        },
+        {
+          "question": "uire shifting elements",
+          "answer": "s arrays do.",
+          "context": "especially in the middle of the data structure, a linked list is \npreferable because it does not require shifting elements as arrays do. \n \nPanel Member 2: What is the time complexity of inserting an"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_55",
+      "title": "A primary key is a unique identifier for each reco...",
+      "content": "A primary key is a unique identifier for each record in a table. It ensures that every row can be uniquely \nidentified and prevents duplicate entries. \n \nPanel Member 1: Suppose a database query is slow. What steps would you take to optimize it?",
+      "qaPairs": [
+        {
+          "question": "ue identifier for e",
+          "answer": "ch record in a table. It ensures that every row can be uni",
+          "context": "A primary key is a unique identifier for each record in a table. It ensures that every row can be uniquely \nidentified and"
+        },
+        {
+          "question": "uery is slow. Wh",
+          "answer": "t steps would you take to optimize it?",
+          "context": "w can be uniquely \nidentified and prevents duplicate entries. \n \nPanel Member 1: Suppose a database query is slow. What steps would you take to optimize it?"
+        }
+      ],
+      "topics": [
+        "database"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_56",
+      "title": "First, I would analyze the query execution plan to...",
+      "content": "First, I would analyze the query execution plan to identify bottlenecks. Then I would consider adding indexes, \nreducing unnecessary joins, limiting returned columns, and caching frequently accessed data if appropriate. \n \nPanel Member 2: Let us shift to networking basics. What is the difference between HTTP and HTTPS?",
+      "qaPairs": [
+        {
+          "question": "uery execution pl",
+          "answer": "n to identify bottlenecks. Then I would consider adding indexes,",
+          "context": "First, I would analyze the query execution plan to identify bottlenecks. Then I would consider adding indexes, \nreducing unnece"
+        }
+      ],
+      "topics": [],
+      "difficulty": "beginner",
+      "type": "general"
+    },
+    {
+      "id": "scenario_58",
+      "title": "Merge combines two branches while preserving the c...",
+      "content": "Merge combines two branches while preserving the commit history of both branches. Rebase rewrites the \ncommit history by placing one branch's commits on top of another, resulting in a cleaner linear history. \n \n\nPanel Member 3: Final question. Where do you see your technical growth in the next few years?",
+      "qaPairs": [
+        {
+          "question": "uestion. Where do you see your technic",
+          "answer": "l growth in the next few years?",
+          "context": "ranch's commits on top of another, resulting in a cleaner linear history. \n \n\nPanel Member 3: Final question. Where do you see your technical growth in the next few years?"
+        }
+      ],
+      "topics": [],
+      "difficulty": "intermediate",
+      "type": "technical"
+    },
+    {
+      "id": "scenario_67",
+      "title": "Good morning. My name is Kamesh. I recently completed my degree in Computer Science. I am",
+      "content": "Good morning. My name is Kamesh. I recently completed my degree in Computer Science. I am \ninterested in software development and I am currently improving my programming skills. \nPanel Member 2: Thank you. Can you tell us about a project you worked on during your studies? I worked on a small web server project using Node.js. \nPanel Member 1: What was the main functionality of the server? It was mainly used to display webpages and handle some requests. \nPanel Member 2: How were the requests handled in the server? I used some modules in Node.js to handle them. \nPanel Member 2: Which module did you use? I think it was the HTTP module. \nPanel Member 3: Can you explain how the HTTP module processes incoming requests? I followed an example from documentation, but I am not fully clear on the internal process. \nPanel Member 1: That is understandable. What type of data structure did you use in the project? Mostly arrays to store some values. \nPanel Member 2: Could you explain how arrays work internally?",
+      "qaPairs": [
+        {
+          "question": "uests? I followed",
+          "answer": "n example from documentation, but I am not fully clear on the internal process.",
+          "context": "k it was the HTTP module. \nPanel Member 3: Can you explain how the HTTP module processes incoming requests? I followed an example from documentation, but I am not fully clear on the internal process."
+        }
+      ],
+      "topics": [
+        "node",
+        "rest"
+      ],
+      "difficulty": "intermediate",
+      "type": "general"
+    },
+    {
+      "id": "scenario_71",
+      "title": "Good morning. My name is Kamesh. I completed my Computer Science degree and I am interested",
+      "content": "Good morning. My name is Kamesh. I completed my Computer Science degree and I am interested \nin software engineering roles. \nPanel Member 2: Let us discuss operating system basics. What is an operating system? It is software that runs on a computer. \nPanel Member 2: What role does it play in a computer system? It helps run programs. \nPanel Member 3: Can you explain process management? I am not familiar with the details. \nPanel Member 3: What is memory management? I think it manages the memory of the computer. \nPanel Member 2: Can you explain how memory is allocated to programs? I am not sure about that. \nPanel Member 1: That is alright. These topics are part of operating system fundamentals. \nPanel Member 2: Reviewing these areas will help build a stronger foundation. I understand. I will review these topics. \nPanel Member 1: Thank you for your time today. Thank you. Panel Member 1: Good afternoon. Please introduce yourself. Good afternoon. My name is Kamesh. I recently graduated in Computer Science and I am interested \nin backend development. \nPanel Member 2: Do you have experience with databases? Yes, I studied databases during my course. \nPanel Member 2: Can you explain what a database is? It stores data. \nPanel Member 3: What is a table in a database? It is used to store rows and columns of data. \nPanel Member 3: What is a primary key? I remember the term but I cannot explain it properly. \nPanel Member 2: Have you written SQL queries before? Only simple ones during coursework. \nPanel Member 1: Could you write a query to retrieve all records from a table? I think it is SELECT but I do not remember the full syntax. \nPanel Member 2: That is alright. It would be helpful to practice writing SQL queries and understanding \nrelational database concepts. Thank you for the suggestion. \n\nPanel Member 1: Thank you for attending the interview. Panel Member 1: Good morning. Please introduce yourself. Good morning. My name is Kamesh. I completed my degree in Computer Science and I am \ninterested in becoming a software developer. \nPanel Member 2: Let us discuss networking basics. What is a network? It connects computers together. \nPanel Member 2: What is the internet? It is a large network. \nPanel Member 3: Have you heard of IP addresses? Yes, but I do not know the details. \nPanel Member 3: What is the purpose of an IP address? I believe it identifies computers. \nPanel Member 2: That is correct. Can you explain how data travels across a network?",
+      "qaPairs": [
+        {
+          "question": "uery to retrieve",
+          "answer": "ll records from a table? I think it is SELECT but I do not remember the full syntax.",
+          "context": "written SQL queries before? Only simple ones during coursework. \nPanel Member 1: Could you write a query to retrieve all records from a table? I think it is SELECT but I do not remember the full synt"
+        }
+      ],
+      "topics": [
+        "sql",
+        "database",
+        "rest",
+        "backend"
+      ],
+      "difficulty": "beginner",
+      "type": "behavioral"
+    },
+    {
+      "id": "scenario_74",
+      "title": "I am not familiar with branching.",
+      "content": "I am not familiar with branching. \nPanel Member 1: That is alright. Version control systems are widely used in development teams. \nPanel Member 2: Learning Git and practicing collaborative development will be very helpful. Thank you for the suggestion. \nPanel Member 1: Thank you for attending the interview. \nPanel Member 1: Good morning. Please introduce yourself. You already have my resume. Everything is written there. \nPanel Member 1: We have reviewed your resume. However, we would still like to hear a brief introduction \nfrom you. I do not see the point. It is the same information. \nPanel Member 2: The introduction helps us understand how you present your experience and interests. Please \nproceed when you are ready. Fine. My name is Kamesh. I studied Computer Science and worked on some projects. \nPanel Member 1: Thank you. Could you describe one of your projects? It was just a basic project. Nothing complicated. \nPanel Member 3: Could you explain the technical aspects of the project? I already said it was basic. There is nothing much to explain. \nPanel Member 2: We are interested in understanding your approach to the implementation. I followed some tutorials online. \nPanel Member 1: Understood. In professional environments, it is important to communicate details about your \nwork clearly. I understand. \nPanel Member 1: Thank you for your time today. We encourage you to approach future interviews with a more \ncollaborative mindset. Alright. \nPanel Member 1: We wish you the best in your future opportunities. Panel Member 1: Good afternoon. Please introduce yourself. I think the technical questions will be more useful than introductions. \nPanel Member 1: We will certainly move to technical questions shortly. Please provide a brief introduction first. My name is Kamesh. I studied Computer Science. \nPanel Member 2: Thank you. What programming languages are you comfortable with? Mostly C and JavaScript. \nPanel Member 2: Could you explain pointers in C? That is a very basic question. \nPanel Member 2: We begin with fundamentals to understand your foundation. I think anyone who studied C should know that. \nPanel Member 3: Please explain the concept in your own words. It points to memory. That is all. \nPanel Member 1: Thank you. During interviews, respectful communication is important regardless of the \ndifficulty of a question. I understand. \nPanel Member 1: We will conclude the interview here. Thank you for attending. Thank you. Panel Member 1: Good morning. Please introduce yourself. Good morning. My name is Kamesh. \nPanel Member 2: Could you explain one of your technical projects? It is already written in my resume. \nPanel Member 2: We would still appreciate hearing you explain it. I do not remember all the details right now. \nPanel Member 3: That is fine. You can explain the general idea of the project. It was just a server project. Nothing special. \nPanel Member 1: Could you describe how the server handled client requests? I think these questions are too detailed for a small project. \nPanel Member 2: We ask such questions to understand your involvement in the project. I see. \nPanel Member 1: Professional discussions require openness and cooperation. That helps us evaluate candidates \nfairly. Understood. \nPanel Member 1: Thank you for your time today. We encourage you to approach future interviews with a more \npositive engagement. Thank you. Panel Member 1: Good afternoon. Please introduce yourself. My name is Kamesh. \nPanel Member 2: Could you elaborate on your technical interests? I am interested in programming. \nPanel Member 3: Which areas of programming interest you most? I have not decided yet. \nPanel Member 2: Could you tell us about any project you worked on? It was a college assignment. \nPanel Member 2: What technologies were used? I do not remember exactly. \nPanel Member 1: It would help if you could provide more details about your experience. I think the questions are too basic. \nPanel Member 1: We appreciate your feedback. However, respectful communication and clear responses are \nessential in professional interviews. I understand. \nPanel Member 1: Thank you for attending the interview. We wish you the best in your future preparation. Thank you. Panel Member 1: Good morning. Please introduce yourself. I think we should skip introductions and move directly to technical questions. \nPanel Member 1: We will follow our standard interview process. Please begin with a brief introduction. My name is Kamesh. I studied Computer Science. \nPanel Member 2: Thank you. Could you explain one programming concept you are comfortable with? There are many concepts. \nPanel Member 2: You may choose any one. I do not think explaining simple concepts proves anything. \nPanel Member 3: Explaining fundamentals helps us understand how clearly candidates communicate technical \nideas. Alright. \nPanel Member 1: We expect professional communication during the interview process. Understood. \nPanel Member 1: We will conclude the interview here. Thank you for your time. Thank you.",
+      "qaPairs": [
+        {
+          "question": "uestions will be more useful th",
+          "answer": "n introductions.",
+          "context": "ure opportunities. Panel Member 1: Good afternoon. Please introduce yourself. I think the technical questions will be more useful than introductions. \nPanel Member 1: We will certainly move to technic"
+        },
+        {
+          "question": "uestions shortly. Ple",
+          "answer": "se provide a brief introduction first. My name is Kamesh. I studied Computer Science.",
+          "context": "stions will be more useful than introductions. \nPanel Member 1: We will certainly move to technical questions shortly. Please provide a brief introduction first. My name is Kamesh. I studied Computer"
+        },
+        {
+          "question": "uests? I think these questions",
+          "answer": "re too detailed for a small project.",
+          "context": "erver project. Nothing special. \nPanel Member 1: Could you describe how the server handled client requests? I think these questions are too detailed for a small project. \nPanel Member 2: We ask such q"
+        },
+        {
+          "question": "uestions to underst",
+          "answer": "nd your involvement in the project. I see.",
+          "context": "equests? I think these questions are too detailed for a small project. \nPanel Member 2: We ask such questions to understand your involvement in the project. I see. \nPanel Member 1: Professional discus"
+        },
+        {
+          "question": "uire openness",
+          "answer": "nd cooperation. That helps us evaluate candidates",
+          "context": "s to understand your involvement in the project. I see. \nPanel Member 1: Professional discussions require openness and cooperation. That helps us evaluate candidates \nfairly. Understood. \nPanel Member"
+        }
+      ],
+      "topics": [
+        "javascript",
+        "java",
+        "rest",
+        "git",
+        "communication"
+      ],
+      "difficulty": "beginner",
+      "type": "technical"
+    }
+  ]
+}

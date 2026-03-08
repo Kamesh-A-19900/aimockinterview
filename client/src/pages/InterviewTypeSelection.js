@@ -24,7 +24,7 @@ function InterviewTypeSelection() {
       icon: '📄',
       description: 'Personalized interview based on your resume and experience',
       features: ['Resume upload', 'Project questions', 'STAR method', 'AI-powered'],
-      duration: '30-120 minutes',
+      duration: '15 minutes',
       difficulty: 'Intermediate',
       active: true,
       route: '/interview'
@@ -35,7 +35,7 @@ function InterviewTypeSelection() {
       icon: '💻',
       description: 'Technical coding assessment with algorithm problems',
       features: ['8 languages', 'Progressive difficulty', 'Code optimization', 'Complexity analysis'],
-      duration: '30-90 minutes',
+      duration: '15-90 minutes',
       difficulty: 'Technical',
       active: false,
       comingSoon: true

@@ -4,10 +4,13 @@
   "description": "Mock Interview Agent Backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "NODE_ENV=production node server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
     "migrate": "node database/migrate.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "init-questions": "node scripts/initializeQuestionBank.js",
+    "cleanup": "node scripts/cleanupAbandonedInterviews.js",
+    "check-env": "node scripts/checkEnv.js",
+    "test-groq": "node scripts/testGroqAPI.js"
   },
   "keywords": [
     "interview",
